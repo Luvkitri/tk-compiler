@@ -1,2 +1,2 @@
 # tk-compiler
-University project - pascal compiler in c++.
+University project: Pascal compiler in c++.
