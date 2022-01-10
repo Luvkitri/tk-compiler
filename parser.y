@@ -4,21 +4,24 @@
 
 /* Set of essentials tokens */
 %token T_PROGRAM
-%token T_VARIABLE
+%token T_VAR
 %token T_INTEGER
 %token T_REAL
 %token T_BEGIN
 %token T_END
 %token T_ASSIGN
 %token T_ID
-%token T_DIV
-%token T_MOD
-%token T_NUM
 %token T_IF
 %token T_THEN
 %token T_ELSE
 %token T_WHILE
 %token T_DO
+%token T_RELOP
+%token T_SIGN
+%token T_OR
+%token T_MULOP // "*" "/" DIV MOD "&"
+%token T_NUM
+%token T_NOT
 
 %%
   program:
@@ -41,7 +44,7 @@
     }
     ;
   declarations:
-    declarations T_VARIABLE identifier_list ':' type ';' {
+    declarations T_VAR identifier_list ':' type ';' {
       // Handle variables declarations
     }
     |
@@ -75,7 +78,7 @@
   compound_statement:
     T_BEGIN optional_statements T_END
     ;
-  optional_statement:
+  optional_statements:
     statement_list
     |
     ;
@@ -103,7 +106,55 @@
     } statement {
 
     }
+    ;
   variable:
-    
+    T_ID
+    | T_ID '[' expression ']' {
+
+    }
+    ;
+  procedure_statement:
+    T_ID
+    | T_ID '(' expression_list ')'
+    ;
+  expression_list:
+    expression {
+      // push to identifier 
+    }
+    | expression_list ',' expression {
+      // push to identifier
+    }
+    ;
+  expression:
+    simple_expression
+    | simple_expression T_RELOP simple_expression {
+      // generate functions
+    }
+    ;
+  simple_expression:
+    term
+    | T_SIGN term {
+
+    }
+    | simple_expression T_SIGN term {
+
+    }
+    | simple_expression T_OR term {
+
+    }
+    ;
+  term:
+    factor
+    | term T_MULOP factor  {
+
+    }
+    ;
+  factor:
+    variable
+    | T_ID '(' expression_list ')'
+    | T_NUM
+    | '(' expression ')'
+    | T_NOT factor
+    ;
 
 %%

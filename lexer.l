@@ -13,12 +13,19 @@
 */
 %option noyywrap
 
-DIGIT [0-9]
-LETTER [a-zA-Z]
-DIGITS {DIGIT}+
-ID {LETTER}({LETTER}|{DIGIT})*
+DIGIT                             [0-9]
+LETTER                            [a-zA-Z]
+DIGITS                            {DIGIT}+
+ID                                {LETTER}({LETTER}|{DIGIT})*
+SIGN                              "+"|""
+MULOP                             "*"|"/"|"div"|"mod"|"&"
+RELOP                             "="|"<>"|">"|">="|"<"|"<="
+
 
 %%
-[ \t\n]+ {/* Skip whitespaces, tabs and new lines (those are maintained by yylineno) */}
-
+[ \t\n]+                          {/* Skip whitespaces, tabs and new lines (those are maintained by yylineno) */}
+"program"                         { return T_PROGRAM; }
+"var"                             { return T_VAR; }
+"begin"                           { return T_BEGIN; }
+"end"                             { return T_END; }
 %%
