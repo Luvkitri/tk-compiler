@@ -17,11 +17,21 @@
 %token T_WHILE
 %token T_DO
 %token T_RELOP
-%token T_SIGN
+%token T_ADDOP
 %token T_OR
-%token T_MULOP // "*" "/" DIV MOD "&"
+%token T_MULOP // "*" "/" DIV MOD AND
 %token T_NUM
 %token T_NOT
+%token T_EQ
+%token T_GE
+%token T_LE
+%token T_GR
+%token T_LO
+%token T_NE
+%token T_MUL
+%token T_DIV
+%token T_ADD
+%token T_SUB
 
 %%
   program:
@@ -133,10 +143,10 @@
     ;
   simple_expression:
     term
-    | T_SIGN term {
+    | T_ADDOP term {
 
     }
-    | simple_expression T_SIGN term {
+    | simple_expression T_ADDOP term {
 
     }
     | simple_expression T_OR term {
