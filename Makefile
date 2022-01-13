@@ -1,5 +1,5 @@
 headers = global.hpp lexer.hpp logger.hpp main.hpp symbol.hpp parser.hpp error.hpp
-objects = main.o logger.o lexer.o parser.o symbol.o error.o
+objects = error.o lexer.o main.o parser.o logger.o symbol.o emitter.o
 flags = -Wall 
 
 output: $(objects)
@@ -8,7 +8,7 @@ output: $(objects)
 parser.cpp parser.hpp: parser.y
 	bison -d -o parser.cpp parser.y
 
-lexer.cpp: lexer.l
+lexer.cpp: lexer.l $(headers)
 	flex -o lexer.cpp lexer.l
 
 main.o: main.cpp $(headers)
@@ -23,12 +23,14 @@ error.o: error.cpp $(headers)
 symbol.o: symbol.cpp $(headers)
 	g++ -c $(flags) symbol.cpp
 
-lexer.o: lexer.cpp lexer.hpp
+lexer.o: lexer.cpp $(headers)
 	g++ -c $(flags) lexer.cpp
 
 parser.o: parser.cpp $(headers)
 	g++ -c $(flags) parser.cpp
 
+emitter.o: emitter.cpp $(headers)
+	g++ -c $(flags) emitter.cpp
 .PHONY: clean
 
 clean:

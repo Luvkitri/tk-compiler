@@ -29,7 +29,7 @@ int SymbolTable::insertOrGet(string name, int token, Type type) {
 
 int SymbolTable::insertTemp(Type type) {
   string name = "$t" + to_string(numberOfTemps++);
-  return insert(name, T_VARIABLE, type);
+  return insert(name, T_VAR, type);
 }
 
 int SymbolTable::lookup(string name) {

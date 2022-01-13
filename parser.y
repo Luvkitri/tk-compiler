@@ -32,6 +32,8 @@
 %token T_DIV
 %token T_ADD
 %token T_SUB
+%token T_AND
+%token T_MOD
 
 %%
   program:
@@ -57,7 +59,7 @@
     declarations T_VAR identifier_list ':' type ';' {
       // Handle variables declarations
     }
-    |
+    | %empty
     ;
   type:
     T_INTEGER
@@ -65,7 +67,7 @@
     ;
   subprogram_declarations:
     subprogram_declarations subprogram_declaration ';'
-    |
+    | %empty
     ;
   subprogram_declaration:
     subprogram_head declarations compound_statement {
@@ -79,7 +81,7 @@
     '(' parameter_list ')' {
 
     }
-    |
+    | %empty
     ;
   parameter_list:
     identifier_list ':' type
@@ -90,7 +92,7 @@
     ;
   optional_statements:
     statement_list
-    |
+    | %empty
     ;
   statement_list:
     statement

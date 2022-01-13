@@ -33,57 +33,76 @@ ASSIGNOP                          ":="
 {MULOP}                           { yylval = getMulopToken(yytext); return T_MULOP; }
 {RELOP}                           { yylval = getRelopToken(yytext); return T_RELOP; }
 {ASSIGNOP}                        { return T_ASSIGN; }
-{ID}                              { return T_ID; }
-{DIGITS}                          { return T_NUM; }
+{ID}                              { yylval = symTable.insertOrGet(yytext, T_ID, TYPE_NONE); return T_ID; }
+{DIGITS}                          { yylval = symTable.insertOrGet(yytext, T_NUM, TYPE_INTEGER); return T_NUM; }
 "integer"                         { return T_INTEGER; }
 "real"                            { return T_REAL; }
 %%
 
 int getAddopToken(string match) {
-  switch (match) {
-    case: "+":
-      return T_ADD;
-    case: "-":
-      return T_SUB;
-    case: "or":
-      return T_OR;
-    default:
-      return 1;
+  if (match.compare("+") == 0) {
+    return T_ADD;
   }
+
+  if (match.compare("-") == 0) {
+    return T_SUB;
+  }
+
+  if (match.compare("or") == 0) {
+    return T_OR;
+  }
+
+  return 1;
 }
 
 int getMulopToken(string match) {
-  switch (match) {
-    case: "*":
-      return T_MUL;
-    case: "/":
-      return T_DIV;
-    case: "div":
-      return T_DIV;
-    case: "mod":
-      return T_MOD;
-    case: "and":
-      return T_AND;
-    default:
-      return 1;
+  if (match.compare("*") == 0) {
+    return T_MUL;
   }
+
+  if (match.compare("/") == 0) {
+    return T_DIV;
+  }
+
+  if (match.compare("div") == 0) {
+    return T_DIV;
+  }
+
+  if (match.compare("mod") == 0) {
+    return T_MOD;
+  }
+
+  if (match.compare("and") == 0) {
+    return T_AND;
+  }
+
+  return 1;
 }
 
 int getRelopToken(string match) {
-  switch (match) {
-    case: "=":
-      return T_EQ;
-    case: "<>":
-      return T_NE;
-    case: ">":
-      return T_GR;
-    case: ">=":
-      return T_GE;
-    case: "<":
-      return T_LO;
-    case: "<=":
-      return T_LE;
-    default:
-      return 1;
+  if (match.compare("=") == 0) {
+    return T_EQ;
   }
+
+  if (match.compare("<>") == 0) {
+    return T_NE;
+  }
+
+  if (match.compare(">") == 0) {
+    return T_GR;
+  }
+
+  if (match.compare(">=") == 0) {
+    return T_GE;
+  }
+
+  if (match.compare("<") == 0) {
+    return T_LO;
+  }
+
+  if (match.compare("<=") == 0) {
+    return T_LE;
+  }
+
+  return 1;
 }

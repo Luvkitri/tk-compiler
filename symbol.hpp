@@ -1,7 +1,7 @@
 struct Symbol;
 enum Type : int;
 
-enum Type : int { TYPE_INTEGER, TYPE_REAL };
+enum Type : int { TYPE_INTEGER, TYPE_REAL, TYPE_NONE };
 
 struct Symbol {
   string name;
