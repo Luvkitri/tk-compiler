@@ -38,26 +38,29 @@
 %%
   program:
     T_PROGRAM T_ID '(' identifier_list ')' ';' declarations subprogram_declarations {
-      // write to output lab0
+      writeToStream("lab0:");
     }
     compound_statement
     '.' {
-      // write to output exit
+      writeToStream("\texit");
+      writeToFile();
     }
     ;
   identifier_list:
     T_ID {
-      // check declared variable
-      // push to some kind of id vector
+      if ($1 == -1) {
+        yyerror("Missing 'input' identifier")
+      }
     }
     | identifier_list ',' T_ID {
-      // check declared variable
-      // push to some kind of id vector
+      if ($3 == -1) {
+        yyerror("Missing 'output' identifier")
+      }
     }
     ;
   declarations:
     declarations T_VAR identifier_list ':' type ';' {
-      // Handle variables declarations
+      
     }
     | %empty
     ;

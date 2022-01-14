@@ -1,47 +1,70 @@
 #include "global.hpp"
-using namespace std;
 
 stringstream output;
 
-void writeToStream(string str) {
-    output << str << "\n";
-}
+void writeToStream(string str) { output << str << "\n"; }
 
 void writeToFile() {
-    outputStream << output.str();
+  outputStream << output.str();
+  output.str("");
 }
 
-void emitLabel(Symbol label) {
-    writeToStream(label.name + ":");
-}
+void emitLabel(Symbol label) { writeToStream(label.name + ":"); }
 
-void emitJump(Symbol label) {
-    writeToStream("\tjump.i\t#" + label.name);
-}
+void emitJump(Symbol label) { writeToStream("\tjump.i\t#" + label.name); }
 
 void emitAssignment(Symbol &first, Symbol &second) {
-    if (first.type == second.type) {
-        writeToStream("\tmov." + getOperationTypeSuffix(first.type) + getVariableAddress(first) + "," + getVariableAddress(second));
-    }
+  // TODO check for types
+  writeToStream("\tmov." + getTypeSuffix(first.type) +
+                getSymbolRepresentation(first) + "," +
+                getSymbolRepresentation(second));
 }
 
-string getOperationTypeSuffix(Type type) {
-    if (type == TYPE_INTEGER) {
-        return "i\t";
-    }
-
-    if (type == TYPE_REAL) {
-        return "r\t";
-    }
-
-    yyerror("Invalid type");
-    return "";
+void emitExpression(Symbol &first, Symbol &second, Symbol &result, int op) {
+  // TODO cast to correct type once implementing reals
+  writeToStream("\t" + getInstructionByOperator(op) +
+                getTypeSuffix(result.type) + getSymbolRepresentation(first) +
+                getSymbolRepresentation(second) +
+                getSymbolRepresentation(result));
 }
 
-string getVariableAddress(Symbol &symbol) {
-    if (symbol.token == T_NUM) {
-        return "#" + symbol.name;
-    }
+string getTypeSuffix(Type type) {
+  if (type == TYPE_INTEGER) {
+    return "i\t";
+  }
 
-    return "";
+  // TODO add real type
+
+  yyerror("Type does not exists");
+  return "";
+}
+
+string getSymbolRepresentation(Symbol &symbol) {
+  if (symbol.token == T_NUM) {
+    return "#" + symbol.name;
+  } else if (symbol.token == T_VAR) {
+    // TODO more to implement when functions come to play
+    return to_string(symbol.address);
+  }
+
+  return "";
+}
+
+string getInstructionByOperator(int op) {
+  // TODO Add remaining instructions
+  switch (op) {
+    case T_ADD:
+      return "\tadd";
+    case T_SUB:
+      return "\tsub";
+    case T_MUL:
+      return "\tmul";
+    case T_DIV:
+      return "\tdiv";
+    case T_MOD:
+      return "\tmod";
+    default:
+      yyerror("Operator not allowed");
+      return "";
+  }
 }

@@ -10,7 +10,6 @@ int SymbolTable::insert(string name, int token, Type type) {
   symbol.token = token;
   symbol.address = 0;
   symbol.isGlobal = isInGlobalScope;
-  symbol.isReference = false;
 
   symTable.push_back(symbol);
 

@@ -9,7 +9,6 @@ struct Symbol {
   int token;
   int address;
 
-  bool isReference;
   bool isGlobal;
 
   Symbol();

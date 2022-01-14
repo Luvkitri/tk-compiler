@@ -1,18 +1,19 @@
 #include <cstdio>
+#include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <sstream>
-#include <fstream>
 
 using namespace std;
 
-#include "logger.hpp"
-#include "main.hpp"
-#include "symbol.hpp"
-#include "parser.hpp"
 #include "error.hpp"
 #include "lexer.hpp"
+#include "logger.hpp"
+#include "main.hpp"
+#include "parser.hpp"
+#include "symbol.hpp"
+#include "emitter.hpp"
 
 extern bool isInGlobalScope;
 extern SymbolTable symTable;
