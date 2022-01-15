@@ -63,6 +63,10 @@ string getInstructionByOperator(int op) {
       return "\tdiv";
     case T_MOD:
       return "\tmod";
+    case T_OR:
+      return "\tor";
+    case T_AND:
+      return "\tand";
     default:
       yyerror("Operator not allowed");
       return "";

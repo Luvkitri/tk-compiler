@@ -1,6 +1,10 @@
 %{
   #include "global.hpp"
+
+  vector<int> ids;
 %}
+
+%define api.value.type union
 
 /* Set of essentials tokens */
 %token T_PROGRAM
@@ -35,6 +39,9 @@
 %token T_AND
 %token T_MOD
 
+%type <int> simple_expression
+%type <int> term
+
 %%
   program:
     T_PROGRAM T_ID '(' identifier_list ')' ';' declarations subprogram_declarations {
@@ -48,19 +55,27 @@
     ;
   identifier_list:
     T_ID {
-      if ($1 == -1) {
-        yyerror("Missing 'input' identifier")
-      }
+      ids.push_back($1);
     }
     | identifier_list ',' T_ID {
-      if ($3 == -1) {
-        yyerror("Missing 'output' identifier")
-      }
+      ids.push_back($3);
     }
     ;
   declarations:
     declarations T_VAR identifier_list ':' type ';' {
-      
+      for (auto &id : ids) {
+        Symbol &symbol = symbolTable.get(id);
+
+        if ($5 == T_INTEGER) {
+          symbol.token = T_VAR;
+          symbol.type = TYPE_INTEGER;
+          symbolTable.allocate(id);
+        } else {
+          yyerror("Invalid type decleration");
+        }
+      }
+
+      ids.clear();
     }
     | %empty
     ;
@@ -73,17 +88,13 @@
     | %empty
     ;
   subprogram_declaration:
-    subprogram_head declarations compound_statement {
-      // do something
-    }
+    subprogram_head declarations compound_statement
     ;
   subprogram_head:
     %empty
     ;
   arguments:
-    '(' parameter_list ')' {
-
-    }
+    '(' parameter_list ')'
     | %empty
     ;
   parameter_list:
@@ -103,7 +114,7 @@
     ;
   statement:
     variable T_ASSIGN expression {
-      // generate assignment
+      emitAssignment(symbolTable.get($1), symbolTable.get($3));
     }
     | procedure_statement
     | compound_statement
@@ -134,34 +145,37 @@
     ;
   expression_list:
     expression {
-      // push to identifier 
+      ids.push_back($1);
     }
     | expression_list ',' expression {
-      // push to identifier
+      ids.push_back($3);
     }
     ;
   expression:
     simple_expression
     | simple_expression T_RELOP simple_expression {
-      // generate functions
+      
     }
     ;
   simple_expression:
     term
     | T_ADDOP term {
-
+      if ($1 == T_ADD) {
+        $$ = $2;
+      } else if ($1 == T_SUB) {
+        // -1
+      }
     }
     | simple_expression T_ADDOP term {
-
-    }
-    | simple_expression T_OR term {
-
+        $$ = symbolTable.insertTemp(T_INTEGER);
+        generateExpression(symbolTable.get($1), symbolTable.get($3), symbolTable.get($$), $2);
     }
     ;
   term:
     factor
-    | term T_MULOP factor  {
-
+    | term T_MULOP factor {
+        $$ = symbolTable.insertTemp(T_INTEGER);
+        generateExpression(symbolTable.grt($1), symbolTable.get($3), symbolTable.get($$), $2);
     }
     ;
   factor:

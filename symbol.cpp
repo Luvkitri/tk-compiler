@@ -3,6 +3,10 @@
 Symbol::Symbol() {}
 Symbol::~Symbol() {}
 
+Symbol SymbolTable::get(int index) {
+  return symTable.at(index);
+}
+
 int SymbolTable::insert(string name, int token, Type type) {
   Symbol symbol;
   symbol.name = name;
@@ -48,4 +52,24 @@ int SymbolTable::lookup(string name) {
   }
 
   return -1;
+}
+
+void SymbolTable::allocate(int index) {
+  Symbol &symbol = symTable.at(index);
+  if (isInGlobalScope) {
+    symbol.address = globalAddress;
+    globalAddress += getSizeOfSymbolAt(index);
+  }
+}
+
+int SymbolTable::getSizeOfSymbolAt(int index) {
+  Symbol &symbol = symTable.at(index);
+
+  if (symbol.type == TYPE_INTEGER) {
+    return 4;
+  } else if (symbol.type == TYPE_REAL) {
+    return 8;
+  }
+
+  return 0;
 }
