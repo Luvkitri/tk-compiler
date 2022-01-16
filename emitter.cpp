@@ -9,27 +9,27 @@ void writeToFile() {
   output.str("");
 }
 
-void emitLabel(Symbol label) { writeToStream(label.name + ":"); }
+void emitLabel(Symbol& label) { writeToStream(label.name + ":"); }
 
-void emitJump(Symbol label) { writeToStream("\tjump.i\t#" + label.name); }
+void emitJump(Symbol& label) { writeToStream("\tjump.i\t#" + label.name); }
 
-void emitAssignment(Symbol &first, Symbol &second) {
+void emitAssignment(Symbol& first, Symbol& second) {
   // TODO check for types
   writeToStream("\tmov." + getTypeSuffix(first.type) +
                 getSymbolRepresentation(first) + "," +
                 getSymbolRepresentation(second));
 }
 
-void emitExpression(Symbol &first, Symbol &second, Symbol &result, int op) {
+void emitExpression(Symbol& first, Symbol& second, Symbol& output, int op) {
   // TODO cast to correct type once implementing reals
   writeToStream("\t" + getInstructionByOperator(op) +
-                getTypeSuffix(result.type) + getSymbolRepresentation(first) +
+                getTypeSuffix(output.type) + getSymbolRepresentation(first) +
                 getSymbolRepresentation(second) +
-                getSymbolRepresentation(result));
+                getSymbolRepresentation(output));
 }
 
-string getTypeSuffix(Type type) {
-  if (type == TYPE_INTEGER) {
+string getTypeSuffix(int type) {
+  if (type == T_INTEGER) {
     return "i\t";
   }
 
@@ -39,7 +39,7 @@ string getTypeSuffix(Type type) {
   return "";
 }
 
-string getSymbolRepresentation(Symbol &symbol) {
+string getSymbolRepresentation(Symbol& symbol) {
   if (symbol.token == T_NUM) {
     return "#" + symbol.name;
   } else if (symbol.token == T_VAR) {
@@ -69,6 +69,24 @@ string getInstructionByOperator(int op) {
       return "\tand";
     default:
       yyerror("Operator not allowed");
+      return "";
+  }
+}
+
+string getTokenAsString(int token) {
+  // TODO Add remaining tokens
+  switch (token) {
+    case T_ID:
+      return "id";
+    case T_VAR:
+      return "variable";
+    case T_NUM:
+      return "number";
+    case T_LABEL:
+      return "label";
+    case T_INTEGER:
+      return "integer";
+    default:
       return "";
   }
 }

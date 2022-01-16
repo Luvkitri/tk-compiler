@@ -1,7 +1,6 @@
-enum Type : int { TYPE_INTEGER = T_INTEGER, TYPE_REAL = T_REAL };
 struct Symbol {
   string name;
-  Type type;
+  int type;
   int token;
   int address;
 
@@ -20,11 +19,12 @@ class SymbolTable {
  public:
   SymbolTable();
   ~SymbolTable();
-  Symbol get(int index);
-  int insert(string name, int token, Type type);
-  int insertOrGet(string name, int token, Type type);
-  int insertTemp(Type type);
+  Symbol& get(int index);
+  int insert(string name, int token, int type);
+  int insertOrGet(string name, int token, int type);
+  int insertTemp(int type);
   int lookup(string name);
   void allocate(int index);
   int getSizeOfSymbolAt(int index);
+  void display();
 };

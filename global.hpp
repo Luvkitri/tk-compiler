@@ -16,8 +16,7 @@ using namespace std;
 #include "emitter.hpp"
 
 extern bool isInGlobalScope;
-extern SymbolTable symTable;
+extern SymbolTable symbolTable;
 extern ofstream outputStream;
 
-// parser
 int yyparse();

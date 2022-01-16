@@ -1,9 +1,10 @@
 #include "global.hpp"
 
 ofstream outputStream;
+SymbolTable symbolTable;
+bool isInGlobalScope = true;
 
 int main(int argc, char *argv[]) {
-  const char *programName = argv[0];
   const char *path = argv[1];
 
   if (argc < 2) {
@@ -20,6 +21,7 @@ int main(int argc, char *argv[]) {
   }
 
   outputStream.open("output.asm", ios::trunc);
+
   if (!outputStream.is_open()) {
     errorLog("Failed to open output file");
     return 1;
@@ -27,7 +29,8 @@ int main(int argc, char *argv[]) {
 
   yyparse();
 
-  // Clear symbol table
+  // Display symbol table
+  symbolTable.display();
 
   // Close streams
   outputStream.close();

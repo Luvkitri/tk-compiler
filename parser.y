@@ -4,13 +4,13 @@
   vector<int> ids;
 %}
 
-%define api.value.type union
-
 /* Set of essentials tokens */
 %token T_PROGRAM
+%token T_LABEL
 %token T_VAR
 %token T_INTEGER
 %token T_REAL
+%token T_NONE
 %token T_BEGIN
 %token T_END
 %token T_ASSIGN
@@ -23,7 +23,7 @@
 %token T_RELOP
 %token T_ADDOP
 %token T_OR
-%token T_MULOP // "*" "/" DIV MOD AND
+%token T_MULOP
 %token T_NUM
 %token T_NOT
 %token T_EQ
@@ -38,9 +38,10 @@
 %token T_SUB
 %token T_AND
 %token T_MOD
+%token T_SIGN
+%token T_FUN
+%token T_PROC
 
-%type <int> simple_expression
-%type <int> term
 
 %%
   program:
@@ -68,7 +69,7 @@
 
         if ($5 == T_INTEGER) {
           symbol.token = T_VAR;
-          symbol.type = TYPE_INTEGER;
+          symbol.type = T_INTEGER;
           symbolTable.allocate(id);
         } else {
           yyerror("Invalid type decleration");
@@ -80,6 +81,8 @@
     | %empty
     ;
   type:
+    standard_type
+  standard_type:
     T_INTEGER
     | T_REAL
     ;
@@ -91,7 +94,8 @@
     subprogram_head declarations compound_statement
     ;
   subprogram_head:
-    %empty
+    T_FUN T_ID arguments ':' standard_type ';'
+    | T_PROC T_ID arguments ';'
     ;
   arguments:
     '(' parameter_list ')'
@@ -159,23 +163,25 @@
     ;
   simple_expression:
     term
-    | T_ADDOP term {
-      if ($1 == T_ADD) {
+    | T_SIGN term {
+      if ($1 == T_SUB) {
+        $$ = symbolTable.insertTemp(T_INTEGER);
+        int indexOfSymbolZero = symbolTable.insertOrGet("0", T_NUM, T_INTEGER);
+        emitExpression(symbolTable.get(indexOfSymbolZero), symbolTable.get($2), symbolTable.get($$), $1);
+      } else {
         $$ = $2;
-      } else if ($1 == T_SUB) {
-        // -1
-      }
+      } 
     }
     | simple_expression T_ADDOP term {
         $$ = symbolTable.insertTemp(T_INTEGER);
-        generateExpression(symbolTable.get($1), symbolTable.get($3), symbolTable.get($$), $2);
+        emitExpression(symbolTable.get($1), symbolTable.get($3), symbolTable.get($$), $2);
     }
     ;
   term:
     factor
     | term T_MULOP factor {
         $$ = symbolTable.insertTemp(T_INTEGER);
-        generateExpression(symbolTable.grt($1), symbolTable.get($3), symbolTable.get($$), $2);
+        emitExpression(symbolTable.get($1), symbolTable.get($3), symbolTable.get($$), $2);
     }
     ;
   factor:

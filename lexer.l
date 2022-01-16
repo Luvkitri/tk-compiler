@@ -13,10 +13,14 @@
 */
 %option noyywrap
 
+%option nounput
+%option noinput
+
 DIGIT                             [0-9]
 LETTER                            [a-zA-Z]
 DIGITS                            {DIGIT}+
 ID                                {LETTER}({LETTER}|{DIGIT})*
+SIGN                              "+"|"-"
 ADDOP                              "+"|"-"|"or"
 MULOP                             "*"|"/"|"div"|"mod"|"and"
 RELOP                             "="|"<>"|">"|">="|"<"|"<="
@@ -29,15 +33,28 @@ ASSIGNOP                          ":="
 "var"                             { return T_VAR; }
 "begin"                           { return T_BEGIN; }
 "end"                             { return T_END; }
+"integer"                         { return T_INTEGER; }
+"real"                            { return T_REAL; }
+{SIGN}                            { yylval = getSignToken(yytext); return T_SIGN;}
 {ADDOP}                           { yylval = getAddopToken(yytext); return T_ADDOP; }
 {MULOP}                           { yylval = getMulopToken(yytext); return T_MULOP; }
 {RELOP}                           { yylval = getRelopToken(yytext); return T_RELOP; }
 {ASSIGNOP}                        { return T_ASSIGN; }
-{ID}                              { yylval = symTable.insertOrGet(yytext, T_ID, TYPE_NONE); return T_ID; }
-{DIGITS}                          { yylval = symTable.insertOrGet(yytext, T_NUM, TYPE_INTEGER); return T_NUM; }
-"integer"                         { return T_INTEGER; }
-"real"                            { return T_REAL; }
+{ID}                              { yylval = symbolTable.insertOrGet(yytext, T_ID, T_NONE); return T_ID; }
+{DIGITS}                          { yylval = symbolTable.insertOrGet(yytext, T_NUM, T_INTEGER); return T_NUM; }
 %%
+
+int getSignToken(string match) {
+  if (match.compare("+") == 0) {
+    return T_ADD;
+  }
+
+  if (match.compare("-") == 0) {
+    return T_SUB;
+  }
+
+  return 1;
+}
 
 int getAddopToken(string match) {
   if (match.compare("+") == 0) {

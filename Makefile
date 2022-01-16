@@ -3,7 +3,7 @@ objects = error.o lexer.o main.o parser.o logger.o symbol.o emitter.o
 flags = -Wall 
 
 output: $(objects)
-	g++ -o output $(objects)
+	g++ $(flags) $(objects) -o output 
 
 parser.cpp parser.hpp: parser.y
 	bison -d -o parser.cpp parser.y
@@ -31,7 +31,8 @@ parser.o: parser.cpp $(headers)
 
 emitter.o: emitter.cpp $(headers)
 	g++ -c $(flags) emitter.cpp
-.PHONY: clean
 
 clean:
 	rm *.o output lexer.cpp parser.hpp parser.cpp
+
+.PHONY: clean
