@@ -46,7 +46,7 @@
 %%
 program:
   T_PROGRAM T_ID '(' identifier_list ')' ';' declarations subprogram_declarations {
-    writeToStream("lab0:");
+    writeToStream("lab0:\n");
   }
   compound_statement
   '.' {

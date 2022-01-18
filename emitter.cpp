@@ -3,7 +3,7 @@
 extern ofstream outputStream;
 stringstream output;
 
-void writeToStream(string str) { output << str << "\n"; }
+void writeToStream(string str) { output << str; }
 
 void writeToFile()
 {
@@ -21,6 +21,7 @@ void emitAssignment(Symbol &variable, Symbol &expression_result)
     writeToStream("\tmov." + getTypeSuffix(expression_result.type) +
                   getSymbolRepresentation(expression_result) + "," +
                   getSymbolRepresentation(variable));
+    writeToStream("\t\t;mov." + getTypeSuffix(expression_result.type) + expression_result.name + "," + variable.name)
 }
 
 void emitExpression(Symbol &first, Symbol &second, Symbol &output, int op)
