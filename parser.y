@@ -22,7 +22,6 @@
 %token T_WHILE
 %token T_DO
 %token T_RELOP
-%token T_ADDOP
 %token T_OR
 %token T_MULOP
 %token T_NUM
@@ -66,8 +65,13 @@ declarations:
   declarations T_VAR identifier_list ':' type ';' {
     for (auto &id : ids) {
       Symbol &symbol = symbolTable.get(id);
+      
+      if (symbol.name == "input" || symbol.name == "output") {
+        continue;
+      }
 
       if ($5 == T_INTEGER) {
+        log(to_string(id));
         symbol.token = T_VAR;
         symbol.type = T_INTEGER;
         symbolTable.allocate(id);
@@ -176,7 +180,11 @@ simple_expression:
       $$ = $2;
     } 
   }
-  | simple_expression T_ADDOP term {
+  | simple_expression T_SIGN term {
+    $$ = symbolTable.insertTemp(T_INTEGER);
+    emitExpression(symbolTable.get($1), symbolTable.get($3), symbolTable.get($$), $2);
+  }
+  | simple_expression T_OR term {
     $$ = symbolTable.insertTemp(T_INTEGER);
     emitExpression(symbolTable.get($1), symbolTable.get($3), symbolTable.get($$), $2);
   }

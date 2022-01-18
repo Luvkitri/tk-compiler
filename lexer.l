@@ -21,7 +21,7 @@ LETTER                            [a-zA-Z]
 DIGITS                            {DIGIT}+
 ID                                {LETTER}({LETTER}|{DIGIT})*
 SIGN                              "+"|"-"
-ADDOP                              "+"|"-"|"or"
+OR                                "or"
 MULOP                             "*"|"/"|"div"|"mod"|"and"
 RELOP                             "="|"<>"|">"|">="|"<"|"<="
 ASSIGNOP                          ":="
@@ -36,7 +36,7 @@ ASSIGNOP                          ":="
 "integer"                         { yylval = T_INTEGER; return T_INTEGER; }
 "real"                            { yylval = T_REAL; return T_REAL; }
 {SIGN}                            { yylval = getSignToken(yytext); return T_SIGN;}
-{ADDOP}                           { yylval = getAddopToken(yytext); return T_ADDOP; }
+{OR}                              { yylval = T_OR; return T_OR; }
 {MULOP}                           { yylval = getMulopToken(yytext); return T_MULOP; }
 {RELOP}                           { yylval = getRelopToken(yytext); return T_RELOP; }
 {ASSIGNOP}                        { return T_ASSIGN; }
@@ -52,22 +52,6 @@ int getSignToken(string match) {
 
   if (match.compare("-") == 0) {
     return T_SUB;
-  }
-
-  return 1;
-}
-
-int getAddopToken(string match) {
-  if (match.compare("+") == 0) {
-    return T_ADD;
-  }
-
-  if (match.compare("-") == 0) {
-    return T_SUB;
-  }
-
-  if (match.compare("or") == 0) {
-    return T_OR;
   }
 
   return 1;

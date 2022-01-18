@@ -5,6 +5,5 @@ extern FILE *yyin;
 extern FILE *yyout;
 
 int getSignToken(string);
-int getAddopToken(string);
 int getMulopToken(string);
 int getRelopToken(string);
