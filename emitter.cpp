@@ -1,5 +1,6 @@
 #include "global.hpp"
 
+extern ofstream outputStream;
 stringstream output;
 
 void writeToStream(string str) { output << str << "\n"; }

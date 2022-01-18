@@ -1,3 +1,5 @@
 #include "global.hpp"
 
-void yyerror(const char *message) { fprintf(stderr, "%s\n", message); }
+void yyerror(const char *message) {
+  cerr << "line: " << yylineno << " error: " << message << endl;
+}

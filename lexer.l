@@ -33,8 +33,8 @@ ASSIGNOP                          ":="
 "var"                             { return T_VAR; }
 "begin"                           { return T_BEGIN; }
 "end"                             { return T_END; }
-"integer"                         { return T_INTEGER; }
-"real"                            { return T_REAL; }
+"integer"                         { yylval = T_INTEGER; return T_INTEGER; }
+"real"                            { yylval = T_REAL; return T_REAL; }
 {SIGN}                            { yylval = getSignToken(yytext); return T_SIGN;}
 {ADDOP}                           { yylval = getAddopToken(yytext); return T_ADDOP; }
 {MULOP}                           { yylval = getMulopToken(yytext); return T_MULOP; }
@@ -42,6 +42,7 @@ ASSIGNOP                          ":="
 {ASSIGNOP}                        { return T_ASSIGN; }
 {ID}                              { yylval = symbolTable.insertOrGet(yytext, T_ID, T_NONE); return T_ID; }
 {DIGITS}                          { yylval = symbolTable.insertOrGet(yytext, T_NUM, T_INTEGER); return T_NUM; }
+.                                 { return *yytext; }
 %%
 
 int getSignToken(string match) {

@@ -5,6 +5,7 @@ SymbolTable symbolTable;
 bool isInGlobalScope = true;
 
 int main(int argc, char *argv[]) {
+  yydebug = 1;
   const char *path = argv[1];
 
   if (argc < 2) {
@@ -31,6 +32,7 @@ int main(int argc, char *argv[]) {
 
   // Display symbol table
   symbolTable.display();
+  writeToFile();
 
   // Close streams
   outputStream.close();
