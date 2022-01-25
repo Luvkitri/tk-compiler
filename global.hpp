@@ -15,6 +15,7 @@ using namespace std;
 #include "symbol.hpp"
 #include "emitter.hpp"
 
+extern bool commentsEnabled;
 extern bool isInGlobalScope;
 extern SymbolTable symbolTable;
 extern ofstream outputStream;

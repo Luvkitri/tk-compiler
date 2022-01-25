@@ -29,7 +29,7 @@ ASSIGNOP                          ":="
 
 %%
 [ \t\n]+                          {/* Skip whitespaces, tabs and new lines (those are maintained by yylineno) */}
-"program"                         { return T_PROGRAM; }
+"program"                         { yylval = symbolTable.insertLabel(); return T_PROGRAM; }
 "var"                             { return T_VAR; }
 "begin"                           { return T_BEGIN; }
 "end"                             { return T_END; }

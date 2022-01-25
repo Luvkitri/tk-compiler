@@ -3,105 +3,122 @@
 extern ofstream outputStream;
 stringstream output;
 
-void writeToStream(string str) { output << str; }
-
-void writeToFile()
-{
-    outputStream << output.str();
-    output.str("");
+void writeToStream(string str, bool newLine) {
+  if (newLine) {
+    output << str << endl;
+  } else {
+    output << str;
+  }
 }
 
-void emitLabel(Symbol &label) { writeToStream(label.name + ":"); }
-
-void emitJump(Symbol &label) { writeToStream("\tjump.i\t#" + label.name); }
-
-void emitAssignment(Symbol &variable, Symbol &expression_result)
-{
-    // TODO check for types
-    writeToStream("\tmov." + getTypeSuffix(expression_result.type) +
-                  getSymbolRepresentation(expression_result) + "," +
-                  getSymbolRepresentation(variable));
-    writeToStream("\t\t;mov." + getTypeSuffix(expression_result.type) + expression_result.name + "," + variable.name)
+void writeToFile() {
+  outputStream << output.str();
+  output.str("");
 }
 
-void emitExpression(Symbol &first, Symbol &second, Symbol &output, int op)
-{
-    // TODO cast to correct type once implementing reals
-    writeToStream(getInstructionByOperator(op) + "." +
-                  getTypeSuffix(output.type) + getSymbolRepresentation(first) + "," +
-                  getSymbolRepresentation(second) + "," +
-                  getSymbolRepresentation(output));
+void emitLabel(Symbol &label) { writeToStream(label.name + ":", true); }
+
+void emitJump(Symbol &label) {
+  writeToStream("\tjump.i\t#" + label.name, !commentsEnabled);
+  if (commentsEnabled) {
+    writeToStream("\tjump.i\t" + label.name, commentsEnabled);
+  }
 }
 
-string getTypeSuffix(int type)
-{
-    if (type == T_INTEGER)
-    {
-        return "i\t";
-    }
+void emitAssignment(Symbol &variable, Symbol &expression_result) {
+  // TODO check for types
 
-    // TODO add real type
+  string instruction = "mov." + getTypeSuffix(expression_result.type);
 
-    yyerror("Type does not exists");
-    return "";
+  writeToStream("\t" + instruction +
+                    getSymbolRepresentation(expression_result) + "," +
+                    getSymbolRepresentation(variable),
+                !commentsEnabled);
+
+  if (commentsEnabled) {
+    writeToStream(
+        "\t\t;" + instruction + expression_result.name + "," + variable.name,
+        commentsEnabled);
+  }
 }
 
-string getSymbolRepresentation(Symbol &symbol)
-{
-    if (symbol.token == T_NUM)
-    {
-        return "#" + symbol.name;
-    }
-    else if (symbol.token == T_VAR)
-    {
-        // TODO more to implement when functions come to play
-        return to_string(symbol.address);
-    }
+void emitExpression(Symbol &first, Symbol &second, Symbol &output, int op) {
+  // TODO cast to correct type once implementing reals
 
-    return "";
+  string instruction =
+      getInstructionByOperator(op) + "." + getTypeSuffix(output.type);
+
+  writeToStream("\t" + instruction + getSymbolRepresentation(first) + "," +
+                    getSymbolRepresentation(second) + "," +
+                    getSymbolRepresentation(output),
+                !commentsEnabled);
+
+  if (commentsEnabled) {
+    writeToStream("\t\t;" + instruction + first.name + "," + second.name + "," +
+                      output.name,
+                  commentsEnabled);
+  }
 }
 
-string getInstructionByOperator(int op)
-{
-    // TODO Add remaining instructions
-    switch (op)
-    {
+string getTypeSuffix(int type) {
+  if (type == T_INTEGER) {
+    return "i\t";
+  }
+
+  // TODO add real type
+
+  yyerror("Type does not exists");
+  return "";
+}
+
+string getSymbolRepresentation(Symbol &symbol) {
+  if (symbol.token == T_NUM) {
+    return "#" + symbol.name;
+  } else if (symbol.token == T_VAR) {
+    // TODO more to implement when functions come to play
+    return to_string(symbol.address);
+  }
+
+  return "";
+}
+
+string getInstructionByOperator(int op) {
+  // TODO Add remaining instructions
+  switch (op) {
     case T_ADD:
-        return "\tadd";
+      return "add";
     case T_SUB:
-        return "\tsub";
+      return "sub";
     case T_MUL:
-        return "\tmul";
+      return "mul";
     case T_DIV:
-        return "\tdiv";
+      return "div";
     case T_MOD:
-        return "\tmod";
+      return "mod";
     case T_OR:
-        return "\tor";
+      return "or";
     case T_AND:
-        return "\tand";
+      return "and";
     default:
-        yyerror("Operator not allowed");
-        return "";
-    }
+      yyerror("Operator not allowed");
+      return "";
+  }
 }
 
-string getTokenAsString(int token)
-{
-    // TODO Add remaining tokens
-    switch (token)
-    {
+string getTokenAsString(int token) {
+  // TODO Add remaining tokens
+  switch (token) {
     case T_ID:
-        return "id";
+      return "id";
     case T_VAR:
-        return "variable";
+      return "variable";
     case T_NUM:
-        return "number";
+      return "number";
     case T_LABEL:
-        return "label";
+      return "label";
     case T_INTEGER:
-        return "integer";
+      return "integer";
     default:
-        return "";
-    }
+      return "";
+  }
 }

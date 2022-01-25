@@ -45,12 +45,20 @@
 
 %%
 program:
-  T_PROGRAM T_ID '(' identifier_list ')' ';' declarations subprogram_declarations {
-    writeToStream("lab0:\n");
+  T_PROGRAM {
+    Symbol &symbol = symbolTable.get($1);
+    emitJump(symbol);
+    emitLabel(symbol);
+  } T_ID '(' identifier_list ')' ';' declarations subprogram_declarations {
+
   }
   compound_statement
   '.' {
-    writeToStream("\texit");
+    writeToStream("\texit", false);
+
+    if (commentsEnabled) {
+      writeToStream("\t\t\t;exit", false);
+    } 
   }
   ;
 identifier_list:
@@ -71,7 +79,6 @@ declarations:
       }
 
       if ($5 == T_INTEGER) {
-        log(to_string(id));
         symbol.token = T_VAR;
         symbol.type = T_INTEGER;
         symbolTable.allocate(id);
@@ -153,7 +160,9 @@ variable:
   ;
 procedure_statement:
   T_ID
-  | T_ID '(' expression_list ')'
+  | T_ID '(' expression_list ')' {
+    
+  }
   ;
 expression_list:
   expression {

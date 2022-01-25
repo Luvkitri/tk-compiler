@@ -3,9 +3,10 @@
 ofstream outputStream;
 SymbolTable symbolTable;
 bool isInGlobalScope = true;
+bool commentsEnabled = true;
 
 int main(int argc, char *argv[]) {
-  yydebug = 1;
+  //yydebug = 1;
   const char *path = argv[1];
 
   if (argc < 2) {

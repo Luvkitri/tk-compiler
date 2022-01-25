@@ -1,9 +1,13 @@
 #include "global.hpp"
 
 Symbol::Symbol() {}
+
 Symbol::~Symbol() {}
 
-SymbolTable::SymbolTable() {}
+SymbolTable::SymbolTable() {
+  insert("read", T_PROC, T_NONE);
+  insert("write", T_PROC, T_NONE);
+}
 SymbolTable::~SymbolTable() {}
 
 Symbol &SymbolTable::get(int index) { return symTable.at(index); }
@@ -35,6 +39,14 @@ int SymbolTable::insertTemp(int type) {
   string name = "$t" + to_string(numberOfTemps++);
   int index = insert(name, T_VAR, type);
   allocate(index);
+  return index;
+}
+
+int SymbolTable::insertLabel() {
+  string labelName = "lab" + to_string(labelCount);
+  labelCount++;
+
+  int index = insert(labelName, T_LABEL, T_NONE);
   return index;
 }
 
@@ -96,6 +108,10 @@ void SymbolTable::display() {
       } else if (symbol.token == T_VAR) {
         cout << getTokenAsString(symbol.token) << "\t" << symbol.name << "\t"
              << getTokenAsString(symbol.type) << "\toffset=" << symbol.address << endl;
+      } else if (symbol.token == T_LABEL) {
+        cout << getTokenAsString(symbol.token) << "\t\t" << symbol.name << endl;
+      } else if (symbol.token == T_PROC) {
+        cout << getTokenAsString(symbol.token) << "\t\t" << symbol.name << endl;
       }
     }
   }

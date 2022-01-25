@@ -1,4 +1,4 @@
-void writeToStream(string str);
+void writeToStream(string str, bool newLine);
 void writeToFile();
 
 void emitLabel(Symbol& label);
