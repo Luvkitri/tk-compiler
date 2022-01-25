@@ -54,10 +54,10 @@ program:
   }
   compound_statement
   '.' {
-    writeToStream("\texit", false);
+    writeToStream("\texit", !commentsEnabled);
 
     if (commentsEnabled) {
-      writeToStream("\t\t\t;exit", false);
+      writeToStream("\t\t\t;exit", commentsEnabled);
     } 
   }
   ;
@@ -161,7 +161,17 @@ variable:
 procedure_statement:
   T_ID
   | T_ID '(' expression_list ')' {
+    if ($1 == symbolTable.lookup("read")) {
+      for (auto &id : ids) {
+        emitRead(symbolTable.get(id));
+      }
+    } else if ($1 == symbolTable.lookup("write")) {
+      for (auto &id : ids) {
+        emitWrite(symbolTable.get(id));
+      }
+    }
     
+    ids.clear();
   }
   ;
 expression_list:
