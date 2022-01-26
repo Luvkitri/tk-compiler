@@ -6,23 +6,28 @@ bool isInGlobalScope = true;
 bool commentsEnabled = true;
 
 int main(int argc, char *argv[]) {
-  //yydebug = 1;
-  const char *path = argv[1];
-
+  // yydebug = 1;
+  
   if (argc < 2) {
-    log("Missing key argument: <path>");
+    errorLog("Missing key argument: <inputPath>");
+    return 1;
+  } else if (argc < 3) {
+    errorLog("Missing key argument: <outpathPath>");
     return 1;
   }
 
-  yyin = fopen(path, "r");
+  const char *inputPath = argv[1];
+  const char *outputPath = argv[2];
+
+  yyin = fopen(inputPath, "r");
 
   if (yyin == nullptr) {
-    string filePath = path;
+    string filePath = inputPath;
     errorLog("The file at path: " + filePath + " does not exists");
     return 1;
   }
 
-  outputStream.open("output.asm", ios::trunc);
+  outputStream.open(outputPath, ios::trunc);
 
   if (!outputStream.is_open()) {
     errorLog("Failed to open output file");

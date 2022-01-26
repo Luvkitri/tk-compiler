@@ -5,6 +5,8 @@
   vector<int> ids;
 %}
 
+%require "3.5.1"
+
 /* Set of essentials tokens */
 %token T_PROGRAM
 %token T_LABEL
@@ -49,9 +51,7 @@ program:
     Symbol &symbol = symbolTable.get($1);
     emitJump(symbol);
     emitLabel(symbol);
-  } T_ID '(' identifier_list ')' ';' declarations subprogram_declarations {
-
-  }
+  } T_ID '(' identifier_list ')' ';' declarations subprogram_declarations
   compound_statement
   '.' {
     writeToStream("\texit", !commentsEnabled);
@@ -170,7 +170,7 @@ procedure_statement:
         emitWrite(symbolTable.get(id));
       }
     }
-    
+
     ids.clear();
   }
   ;
@@ -219,7 +219,9 @@ factor:
   variable
   | T_ID '(' expression_list ')'
   | T_NUM
-  | '(' expression ')'
+  | '(' expression ')' {
+    $$ = $2;
+  }
   | T_NOT factor
   ;
 

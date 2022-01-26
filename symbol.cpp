@@ -51,18 +51,11 @@ int SymbolTable::insertLabel() {
 }
 
 int SymbolTable::lookup(string name) {
-  int index = (int)(symTable.size() - 1);
-  if (isInGlobalScope) {
-    for (; index >= 0; index--) {
-      if (symTable.at(index).name == name) {
-        return index;
-      }
-    }
-  } else {
-    for (; index >= 0; index--) {
-      if (symTable.at(index).name == name && !symTable.at(index).isGlobal) {
-        return index;
-      }
+  int size = (int)(symTable.size() - 1);
+
+  for (int index = 0; index <= size; index++) {
+    if (symTable.at(index).name == name) {
+      return index;
     }
   }
 
@@ -93,26 +86,27 @@ void SymbolTable::display() {
   int i = 0;
 
   for (auto &symbol : symTable) {
-    if (symbol.token != T_ID) {
-      cout << ";" << i++ << "\t";
+    cout << ";" << i++ << "\t";
 
-      if (symbol.isGlobal) {
-        cout << "Global\t";
-      } else {
-        cout << "Local\t";
-      }
+    if (symbol.isGlobal) {
+      cout << "Global\t";
+    } else {
+      cout << "Local\t";
+    }
 
-      if (symbol.token == T_NUM) {
-        cout << getTokenAsString(symbol.token) << "\t" << symbol.name << "\t"
-             << getTokenAsString(symbol.type) << endl;
-      } else if (symbol.token == T_VAR) {
-        cout << getTokenAsString(symbol.token) << "\t" << symbol.name << "\t"
-             << getTokenAsString(symbol.type) << "\toffset=" << symbol.address << endl;
-      } else if (symbol.token == T_LABEL) {
-        cout << getTokenAsString(symbol.token) << "\t\t" << symbol.name << endl;
-      } else if (symbol.token == T_PROC) {
-        cout << getTokenAsString(symbol.token) << "\t\t" << symbol.name << endl;
-      }
+    if (symbol.token == T_NUM) {
+      cout << getTokenAsString(symbol.token) << "\t\t" << symbol.name << "\t"
+           << getTokenAsString(symbol.type) << endl;
+    } else if (symbol.token == T_VAR) {
+      cout << getTokenAsString(symbol.token) << "\t" << symbol.name << "\t"
+           << getTokenAsString(symbol.type) << "\toffset=" << symbol.address
+           << endl;
+    } else if (symbol.token == T_LABEL) {
+      cout << getTokenAsString(symbol.token) << "\t\t" << symbol.name << endl;
+    } else if (symbol.token == T_PROC) {
+      cout << getTokenAsString(symbol.token) << "\t\t" << symbol.name << endl;
+    } else if (symbol.token == T_ID) {
+      cout << getTokenAsString(symbol.token) << "\t\t" << symbol.name << endl;
     }
   }
 }
