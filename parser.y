@@ -1,6 +1,5 @@
 %{
   #include "global.hpp"
-  #define YYDEBUG 1
 
   vector<int> ids;
 %}
@@ -137,26 +136,12 @@ statement:
   }
   | procedure_statement
   | compound_statement
-  | T_IF expression {
-
-  } T_THEN statement {
-
-  } T_ELSE statement {
-
-  }
-  | T_WHILE {
-
-  } expression T_DO {
-
-  } statement {
-
-  }
+  | T_IF expression T_THEN statement T_ELSE statement
+  | T_WHILE expression T_DO statement
   ;
 variable:
   T_ID
-  | T_ID '[' expression ']' {
-
-  }
+  | T_ID '[' expression ']'
   ;
 procedure_statement:
   T_ID
@@ -184,9 +169,7 @@ expression_list:
   ;
 expression:
   simple_expression
-  | simple_expression T_RELOP simple_expression {
-    
-  }
+  | simple_expression T_RELOP simple_expression
   ;
 simple_expression:
   term

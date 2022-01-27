@@ -6,8 +6,6 @@ bool isInGlobalScope = true;
 bool commentsEnabled = true;
 
 int main(int argc, char *argv[]) {
-  // yydebug = 1;
-  
   if (argc < 2) {
     errorLog("Missing key argument: <inputPath>");
     return 1;

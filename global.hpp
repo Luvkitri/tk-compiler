@@ -20,6 +20,5 @@ extern bool isInGlobalScope;
 extern SymbolTable symbolTable;
 extern ofstream outputStream;
 extern FILE *yyin;
-extern int yydebug;
 
 int yyparse();
