@@ -81,6 +81,10 @@ declarations:
         symbol.token = T_VAR;
         symbol.type = T_INTEGER;
         symbolTable.allocate(id);
+      } else if ($5 == T_REAL) {
+        symbol.token = T_VAR;
+        symbol.type = REAL;
+        symbolTable.allocate(id);
       } else {
         yyerror("Invalid type decleration");
       }
@@ -186,10 +190,7 @@ simple_expression:
     $$ = symbolTable.insertTemp(T_INTEGER);
     emitExpression(symbolTable.get($1), symbolTable.get($3), symbolTable.get($$), $2);
   }
-  | simple_expression T_OR term {
-    $$ = symbolTable.insertTemp(T_INTEGER);
-    emitExpression(symbolTable.get($1), symbolTable.get($3), symbolTable.get($$), $2);
-  }
+  | simple_expression T_OR term
   ;
 term:
   factor

@@ -25,20 +25,29 @@ void emitJump(Symbol& label) {
   }
 }
 
-void emitAssignment(Symbol& variable, Symbol& expression_result) {
-  // TODO check for types
+void emitAssignment(Symbol& variable, Symbol& assignee) {
+  string instruction;
 
-  string instruction = "mov." + getSuffixByType(expression_result.type);
-
-  writeToStream("\t" + instruction +
-                    getSymbolRepresentation(expression_result) + "," +
-                    getSymbolRepresentation(variable),
-                !commentsEnabled);
+  if (variable.type == assignee.type) {
+    instruction = "mov." + getSuffixByType(assignee.type);
+    writeToStream("\t" + instruction + getSymbolRepresentation(assignee) + "," +
+                      getSymbolRepresentation(variable),
+                  !commentsEnabled);
+  } else if (variable.type == T_REAL && assignee.type == T_INTEGER) {
+    instruction = "inttoreal." + getSuffixByType(assignee.type);
+    writeToStream("\t" + instruction + getSymbolRepresentation(assignee) + "," +
+                      getSymbolRepresentation(variable),
+                  !commentsEnabled);
+  } else if (variable.type == T_INTEGER && assignee.type == T_REAL) {
+    instruction = "inttoreal." + getSuffixByType(assignee.type);
+    writeToStream("\t" + instruction + getSymbolRepresentation(assignee) + "," +
+                      getSymbolRepresentation(variable),
+                  !commentsEnabled);
+  }
 
   if (commentsEnabled) {
-    writeToStream(
-        "\t\t;" + instruction + expression_result.name + "," + variable.name,
-        commentsEnabled);
+    writeToStream("\t\t;" + instruction + assignee.name + "," + variable.name,
+                  commentsEnabled);
   }
 }
 
@@ -82,12 +91,15 @@ void emitWrite(Symbol& symbol) {
   }
 }
 
+void matchTypes(Symbol& first, Symbol& second) {
+}
+
 string getSuffixByType(int type) {
   if (type == T_INTEGER) {
     return "i\t";
+  } else if (type == T_REAL) {
+    return "r\t";
   }
-
-  // TODO add real type
 
   yyerror("Type does not exists");
   return "";

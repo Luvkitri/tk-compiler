@@ -19,6 +19,9 @@
 DIGIT                             [0-9]
 LETTER                            [a-zA-Z]
 DIGITS                            {DIGIT}+
+OPTIONAL_FRACTION                 "."{DIGITS}
+OPTIONAL_EXPONENT                 (eE)[+-]{DIGITS}
+NUM                               {DIGITS}{OPTIONAL_FRACTION}{OPTIONAL_EXPONENT}?
 ID                                {LETTER}({LETTER}|{DIGIT})*
 SIGN                              "+"|"-"
 OR                                "or"
@@ -41,6 +44,7 @@ ASSIGNOP                          ":="
 {RELOP}                           { yylval = getRelopToken(yytext); return T_RELOP; }
 {ASSIGNOP}                        { return T_ASSIGN; }
 {ID}                              { yylval = symbolTable.insertOrGet(yytext, T_ID, T_NONE); return T_ID; }
+{NUM}                             { yylval = symbolTable.insertOrGet(yytext, T_NUM, T_REAL); return T_NUM; }
 {DIGITS}                          { yylval = symbolTable.insertOrGet(yytext, T_NUM, T_INTEGER); return T_NUM; }
 .                                 { return *yytext; }
 %%

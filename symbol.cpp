@@ -64,6 +64,7 @@ int SymbolTable::lookup(string name) {
 
 void SymbolTable::allocate(int index) {
   Symbol &symbol = symTable.at(index);
+  // TODO handle non global allocation
   if (isInGlobalScope) {
     symbol.address = globalAddress;
     globalAddress += getSizeOfSymbolAt(index);
