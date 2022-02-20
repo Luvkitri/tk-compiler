@@ -1,14 +1,14 @@
-void writeToStream(string str, bool newLine);
+void writeToStream(string, bool);
 void writeToFile();
 
-void emitLabel(Symbol& label);
-void emitJump(Symbol& label);
-void emitAssignment(Symbol& first, Symbol& second);
-void emitExpression(Symbol& first, Symbol& second, Symbol& output, int op);
-void emitRead(Symbol& symbol);
-void emitWrite(Symbol& symbol);
+void emitLabel(int);
+void emitJump(int);
+void emitAssignment(int, int);
+void emitExpression(int, int, int, int);
+void emitRead(int);
+void emitWrite(int);
 
-string getSuffixByType(int type);
-string getSymbolRepresentation(Symbol& symbol);
-string getInstructionByOperator(int op);
-string getTokenAsString(int token);
+string getSuffixByType(int);
+string getSymbolRepresentation(int);
+string getInstructionByOperator(int);
+string getTokenAsString(int);

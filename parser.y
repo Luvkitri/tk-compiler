@@ -47,9 +47,8 @@
 %%
 program:
   T_PROGRAM {
-    Symbol &symbol = symbolTable.get($1);
-    emitJump(symbol);
-    emitLabel(symbol);
+    emitJump($1);
+    emitLabel($1);
   } T_ID '(' identifier_list ')' ';' declarations subprogram_declarations
   compound_statement
   '.' {
@@ -83,7 +82,7 @@ declarations:
         symbolTable.allocate(id);
       } else if ($5 == T_REAL) {
         symbol.token = T_VAR;
-        symbol.type = REAL;
+        symbol.type = T_REAL;
         symbolTable.allocate(id);
       } else {
         yyerror("Invalid type decleration");
@@ -136,7 +135,7 @@ statement_list:
   ;
 statement:
   variable T_ASSIGN expression {
-    emitAssignment(symbolTable.get($1), symbolTable.get($3));
+    emitAssignment($1, $3);
   }
   | procedure_statement
   | compound_statement
@@ -152,11 +151,11 @@ procedure_statement:
   | T_ID '(' expression_list ')' {
     if ($1 == symbolTable.lookup("read")) {
       for (auto &id : ids) {
-        emitRead(symbolTable.get(id));
+        emitRead(id);
       }
     } else if ($1 == symbolTable.lookup("write")) {
       for (auto &id : ids) {
-        emitWrite(symbolTable.get(id));
+        emitWrite(id);
       }
     }
 
@@ -181,14 +180,14 @@ simple_expression:
     if ($1 == T_SUB) {
       $$ = symbolTable.insertTemp(T_INTEGER);
       int indexOfSymbolZero = symbolTable.insertOrGet("0", T_NUM, T_INTEGER);
-      emitExpression(symbolTable.get(indexOfSymbolZero), symbolTable.get($2), symbolTable.get($$), $1);
+      emitExpression(indexOfSymbolZero, $2, $$, $1);
     } else {
       $$ = $2;
     } 
   }
   | simple_expression T_SIGN term {
     $$ = symbolTable.insertTemp(T_INTEGER);
-    emitExpression(symbolTable.get($1), symbolTable.get($3), symbolTable.get($$), $2);
+    emitExpression($1, $3, $$, $2);
   }
   | simple_expression T_OR term
   ;
@@ -196,7 +195,7 @@ term:
   factor
   | term T_MULOP factor {
     $$ = symbolTable.insertTemp(T_INTEGER);
-    emitExpression(symbolTable.get($1), symbolTable.get($3), symbolTable.get($$), $2);
+    emitExpression($1, $3, $$, $2);
   }
   ;
 factor:
