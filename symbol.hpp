@@ -28,5 +28,6 @@ class SymbolTable {
   int lookup(string name);
   void allocate(int index);
   int getSizeOfSymbolAt(int index);
+  int selectType(int, int);
   void display();
 };

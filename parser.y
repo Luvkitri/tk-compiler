@@ -55,7 +55,7 @@ program:
     writeToStream("\texit", !commentsEnabled);
 
     if (commentsEnabled) {
-      writeToStream("\t\t\t;exit", commentsEnabled);
+      writeToStream("\t\t\t\t;exit", commentsEnabled);
     } 
   }
   ;
@@ -139,7 +139,19 @@ statement:
   }
   | procedure_statement
   | compound_statement
-  | T_IF expression T_THEN statement T_ELSE statement
+  | T_IF expression {
+    int elseLabelIndex = symbolTable.insertLabel();
+    int falseIndex = symbolTable.insertOrGet("0", T_NUM, T_INTEGER);
+    emitRelopExpression($2, falseIndex, elseLabelIndex, T_EQ);
+    $2 = elseLabelIndex;
+  } T_THEN statement {
+    int endConditionalLabelIndex = symbolTable.insertLabel();
+    emitJump(endConditionalLabelIndex);
+    emitLabel($2);
+    $5 = endConditionalLabelIndex;
+  } T_ELSE statement {
+    emitLabel($5);
+  }
   | T_WHILE expression T_DO statement
   ;
 variable:
@@ -172,13 +184,41 @@ expression_list:
   ;
 expression:
   simple_expression
-  | simple_expression T_RELOP simple_expression
+  | simple_expression T_RELOP simple_expression {
+    // Label for true condition
+    int trueLabelIndex = symbolTable.insertLabel();
+    emitRelopExpression($1, $3, trueLabelIndex, $2);
+
+    // Temp for storing condition result
+    int conditionResultIndex = symbolTable.insertTemp(T_INTEGER);
+    
+    // Set if statement result with false
+    int falseIndex = symbolTable.insertOrGet("0", T_NUM, T_INTEGER);
+    emitAssignment(conditionResultIndex, falseIndex);
+
+    // Jump to label that check for condition - 'THEN'
+    int thenLabelIndex = symbolTable.insertLabel();
+    emitJump(thenLabelIndex);
+
+    // Add true label 
+    emitLabel(trueLabelIndex);
+
+    // Set condition statement result to true
+    int trueIndex = symbolTable.insertOrGet("1", T_NUM, T_INTEGER);
+    emitAssignment(conditionResultIndex, trueIndex);
+
+    // Add 'THEN' label
+    emitLabel(thenLabelIndex);
+
+    // Return condition result
+    $$ = conditionResultIndex;
+  }
   ;
 simple_expression:
   term
   | T_SIGN term {
     if ($1 == T_SUB) {
-      $$ = symbolTable.insertTemp(T_INTEGER);
+      $$ = symbolTable.insertTemp(symbolTable.get($2).type);
       int indexOfSymbolZero = symbolTable.insertOrGet("0", T_NUM, T_INTEGER);
       emitExpression(indexOfSymbolZero, $2, $$, $1);
     } else {
@@ -186,7 +226,8 @@ simple_expression:
     } 
   }
   | simple_expression T_SIGN term {
-    $$ = symbolTable.insertTemp(T_INTEGER);
+    emitCastTo($1, $3);
+    $$ = symbolTable.insertTemp(symbolTable.selectType($1, $3));
     emitExpression($1, $3, $$, $2);
   }
   | simple_expression T_OR term
@@ -194,7 +235,8 @@ simple_expression:
 term:
   factor
   | term T_MULOP factor {
-    $$ = symbolTable.insertTemp(T_INTEGER);
+    emitCastTo($1, $3);
+    $$ = symbolTable.insertTemp(symbolTable.selectType($1, $3));
     emitExpression($1, $3, $$, $2);
   }
   ;

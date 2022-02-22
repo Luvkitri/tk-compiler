@@ -19,7 +19,7 @@ void writeToFile() {
 void emitLabel(int labelIndex) {
   Symbol &label = symbolTable.get(labelIndex);
   writeToStream(label.name + ":", true);
-  }
+}
 
 void emitJump(int labelIndex) {
   Symbol &label = symbolTable.get(labelIndex);
@@ -27,7 +27,7 @@ void emitJump(int labelIndex) {
   writeToStream("\tjump.i\t#" + label.name, !commentsEnabled);
 
   if (commentsEnabled) {
-    writeToStream("\t\t;jump.i\t" + label.name, commentsEnabled);
+    writeToStream("\t\t\t;jump.i\t" + label.name, commentsEnabled);
   }
 }
 
@@ -38,19 +38,20 @@ void emitAssignment(int variableIndex, int assigneeIndex) {
   string instruction;
 
   if (variable.type == assignee.type) {
-    instruction = "mov." + getSuffixByType(assignee.type);
-    writeToStream("\t" + instruction + getSymbolRepresentation(assigneeIndex) + "," +
-                      getSymbolRepresentation(variableIndex),
+    instruction = "mov." + getSuffixByType(assignee.type, true);
+    writeToStream("\t" + instruction + getSymbolRepresentation(assigneeIndex) +
+                      "," + getSymbolRepresentation(variableIndex),
                   !commentsEnabled);
   } else if (variable.type == T_REAL && assignee.type == T_INTEGER) {
-    instruction = "inttoreal." + getSuffixByType(assignee.type);
-    writeToStream("\t" + instruction + getSymbolRepresentation(assigneeIndex) + "," +
-                      getSymbolRepresentation(variableIndex),
+    instruction = "inttoreal." + getSuffixByType(assignee.type, false);
+    writeToStream("\t" + instruction + getSymbolRepresentation(assigneeIndex) +
+                      "," + getSymbolRepresentation(variableIndex),
                   !commentsEnabled);
+
   } else if (variable.type == T_INTEGER && assignee.type == T_REAL) {
-    instruction = "inttoreal." + getSuffixByType(assignee.type);
-    writeToStream("\t" + instruction + getSymbolRepresentation(assigneeIndex) + "," +
-                      getSymbolRepresentation(variableIndex),
+    instruction = "realtoint." + getSuffixByType(assignee.type, false);
+    writeToStream("\t" + instruction + getSymbolRepresentation(assigneeIndex) +
+                      "," + getSymbolRepresentation(variableIndex),
                   !commentsEnabled);
   }
 
@@ -61,14 +62,12 @@ void emitAssignment(int variableIndex, int assigneeIndex) {
 }
 
 void emitExpression(int firstIndex, int secondIndex, int outputIndex, int op) {
-  // TODO cast to correct type once implementing reals
-
   Symbol &first = symbolTable.get(firstIndex);
   Symbol &second = symbolTable.get(secondIndex);
   Symbol &output = symbolTable.get(outputIndex);
 
   string instruction =
-      getInstructionByOperator(op) + "." + getSuffixByType(output.type);
+      getInstructionByOperator(op) + "." + getSuffixByType(output.type, true);
 
   writeToStream("\t" + instruction + getSymbolRepresentation(firstIndex) + "," +
                     getSymbolRepresentation(secondIndex) + "," +
@@ -76,8 +75,74 @@ void emitExpression(int firstIndex, int secondIndex, int outputIndex, int op) {
                 !commentsEnabled);
 
   if (commentsEnabled) {
-    writeToStream("\t;" + instruction + first.name + "," + second.name + "," +
+    writeToStream("\t\t;" + instruction + first.name + "," + second.name + "," +
                       output.name,
+                  commentsEnabled);
+  }
+}
+
+void emitCastTo(int &firstIndex, int &secondIndex) {
+  Symbol &first = symbolTable.get(firstIndex);
+  Symbol &second = symbolTable.get(secondIndex);
+
+  string instruction;
+
+  if (first.type == T_INTEGER && second.type == T_REAL) {
+    int tempIndex = symbolTable.insertTemp(T_REAL);
+    Symbol &temp = symbolTable.get(tempIndex);
+
+    instruction = "inttoreal." + getSuffixByType(T_INTEGER, false);
+    writeToStream("\t" + instruction + getSymbolRepresentation(firstIndex) +
+                      ',' + getSymbolRepresentation(tempIndex),
+                  !commentsEnabled);
+
+    if (commentsEnabled) {
+      writeToStream("\t\t;" + instruction + first.name + "," + temp.name,
+                    commentsEnabled);
+    }
+
+    firstIndex = tempIndex;
+  } else if (first.type == T_REAL && second.type == T_INTEGER) {
+    int tempIndex = symbolTable.insertTemp(T_REAL);
+    Symbol &temp = symbolTable.get(tempIndex);
+
+    instruction = "inttoreal." + getSuffixByType(T_INTEGER, false);
+    writeToStream("\t" + instruction + getSymbolRepresentation(secondIndex) +
+                      ',' + getSymbolRepresentation(tempIndex),
+                  !commentsEnabled);
+
+    if (commentsEnabled) {
+      writeToStream("\t\t;" + instruction + first.name + "," + temp.name,
+                    commentsEnabled);
+    }
+
+    secondIndex = tempIndex;
+  }
+}
+
+void emitRelopExpression(int leftSymbolIndex, int rightSymbolIndex,
+                         int labelIndex, int op) {
+  Symbol &left = symbolTable.get(leftSymbolIndex);
+  Symbol &right = symbolTable.get(rightSymbolIndex);
+  Symbol &jumpLabel = symbolTable.get(labelIndex);
+
+  int suffixType = T_INTEGER;
+
+  if (left.type == T_REAL || right.type == T_REAL) {
+    suffixType = T_REAL;
+  }
+
+  string instruction =
+      getInstructionByOperator(op) + "." + getSuffixByType(suffixType, true);
+
+  writeToStream("\t" + instruction + getSymbolRepresentation(leftSymbolIndex) +
+                    "," + getSymbolRepresentation(rightSymbolIndex) + "," +
+                    getSymbolRepresentation(labelIndex),
+                !commentsEnabled);
+
+  if (commentsEnabled) {
+    writeToStream("\t\t;" + instruction + left.name + "," + right.name + "," +
+                      jumpLabel.name,
                   commentsEnabled);
   }
 }
@@ -85,60 +150,54 @@ void emitExpression(int firstIndex, int secondIndex, int outputIndex, int op) {
 void emitRead(int symbolIndex) {
   Symbol &symbol = symbolTable.get(symbolIndex);
 
-  writeToStream("\tread." + getSuffixByType(symbol.type) +
+  writeToStream("\tread." + getSuffixByType(symbol.type, false) +
                     getSymbolRepresentation(symbolIndex),
                 !commentsEnabled);
 
   if (commentsEnabled) {
-    writeToStream("\t\t;read." + getSuffixByType(symbol.type) + symbol.name,
-                  commentsEnabled);
+    writeToStream(
+        "\t\t\t;read." + getSuffixByType(symbol.type, false) + symbol.name,
+        commentsEnabled);
   }
 }
 
 void emitWrite(int symbolIndex) {
   Symbol &symbol = symbolTable.get(symbolIndex);
 
-  writeToStream("\twrite." + getSuffixByType(symbol.type) +
+  writeToStream("\twrite." + getSuffixByType(symbol.type, false) +
                     getSymbolRepresentation(symbolIndex),
                 !commentsEnabled);
 
   if (commentsEnabled) {
-    writeToStream("\t\t;write." + getSuffixByType(symbol.type) + symbol.name,
-                  commentsEnabled);
+    writeToStream(
+        "\t\t\t;write." + getSuffixByType(symbol.type, false) + symbol.name,
+        commentsEnabled);
   }
 }
 
-void matchTypes(int firstIndex, int secondIndex) {
-  // if (first.type == INTEGER && second.type == REAL) {
-  //   int newVar = symbolTable.insertTempSymbol(REAL);
-  //   writeToOutput("\tinttoreal.i\t" + getVariableAddress(symbol1) + ',' +
-  //                 getVariableAddress(symbolTable[newVar]));
-  //   symbol1 = symbolTable[newVar];
-  // } else if (symbol1.type == REAL && symbol2.type == INTEGER) {
-  //   int newVar = symbolTable.insertTempSymbol(REAL);
-  //   writeToOutput("\tinttoreal.i\t" + getVariableAddress(symbol2) + ',' +
-  //                 getVariableAddress(symbolTable[newVar]));
-  //   symbol2 = symbolTable[newVar];
-  // } else if (symbol1.type != symbol2.type) {
-  //   yyerror("incompatible types in casting up");
-  // }
-}
+string getSuffixByType(int type, bool tab) {
+  string suffix;
 
-string getSuffixByType(int type) {
   if (type == T_INTEGER) {
-    return "i\t";
+    suffix += "i";
   } else if (type == T_REAL) {
-    return "r\t";
+    suffix += "r";
+  } else {
+    yyerror("Type does not exists");
+    return "";
   }
 
-  yyerror("Type does not exists");
-  return "";
+  if (tab) {
+    return suffix + "\t";
+  }
+
+  return suffix + " ";
 }
 
 string getSymbolRepresentation(int symbolIndex) {
   Symbol &symbol = symbolTable.get(symbolIndex);
 
-  if (symbol.token == T_NUM) {
+  if (symbol.token == T_NUM || symbol.token == T_LABEL) {
     return "#" + symbol.name;
   } else if (symbol.token == T_VAR) {
     // TODO more to implement when functions come to play
@@ -165,6 +224,18 @@ string getInstructionByOperator(int op) {
       return "or";
     case T_AND:
       return "and";
+    case T_EQ:
+      return "je";
+    case T_GE:
+      return "jge";
+    case T_LE:
+      return "jle";
+    case T_GR:
+      return "jg";
+    case T_LO:
+      return "jl";
+    case T_NE:
+      return "jne";
     default:
       yyerror("Operator not allowed");
       return "";
@@ -184,6 +255,8 @@ string getTokenAsString(int token) {
       return "label";
     case T_INTEGER:
       return "integer";
+    case T_REAL:
+      return "real";
     case T_PROC:
       return "procedure";
     default:

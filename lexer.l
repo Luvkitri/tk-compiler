@@ -26,22 +26,35 @@ ID                                {LETTER}({LETTER}|{DIGIT})*
 SIGN                              "+"|"-"
 OR                                "or"
 MULOP                             "*"|"/"|"div"|"mod"|"and"
-RELOP                             "="|"<>"|">"|">="|"<"|"<="
+RELOP_EQ                          "="
+RELOP_NE                          "<>"
+RELOP_GR                          ">"
+RELOP_GE                          ">="
+RELOP_LO                          "<"
+RELOP_LE                          "<="
 ASSIGNOP                          ":="
 
 
 %%
 [ \t\n]+                          {/* Skip whitespaces, tabs and new lines (those are maintained by yylineno) */}
 "program"                         { yylval = symbolTable.insertLabel(); return T_PROGRAM; }
+"integer"                         { yylval = T_INTEGER; return T_INTEGER; }
+"real"                            { yylval = T_REAL; return T_REAL; }
 "var"                             { return T_VAR; }
 "begin"                           { return T_BEGIN; }
 "end"                             { return T_END; }
-"integer"                         { yylval = T_INTEGER; return T_INTEGER; }
-"real"                            { yylval = T_REAL; return T_REAL; }
-{SIGN}                            { yylval = getSignToken(yytext); return T_SIGN;}
+"if"                              { return T_IF; }
+"then"                            { return T_THEN; }
+"else"                            { return T_ELSE; }
 {OR}                              { yylval = T_OR; return T_OR; }
+{RELOP_EQ}                        { yylval = T_EQ; return T_RELOP; }
+{RELOP_NE}                        { yylval = T_NE; return T_RELOP; }
+{RELOP_GR}                        { yylval = T_GR; return T_RELOP; }
+{RELOP_GE}                        { yylval = T_GE; return T_RELOP; }
+{RELOP_LO}                        { yylval = T_LO; return T_RELOP; }
+{RELOP_LE}                        { yylval = T_LE; return T_RELOP; }
 {MULOP}                           { yylval = getMulopToken(yytext); return T_MULOP; }
-{RELOP}                           { yylval = getRelopToken(yytext); return T_RELOP; }
+{SIGN}                            { yylval = getSignToken(yytext); return T_SIGN;}
 {ASSIGNOP}                        { return T_ASSIGN; }
 {ID}                              { yylval = symbolTable.insertOrGet(yytext, T_ID, T_NONE); return T_ID; }
 {NUM}                             { yylval = symbolTable.insertOrGet(yytext, T_NUM, T_REAL); return T_NUM; }
@@ -80,34 +93,6 @@ int getMulopToken(string match) {
 
   if (match.compare("and") == 0) {
     return T_AND;
-  }
-
-  return 1;
-}
-
-int getRelopToken(string match) {
-  if (match.compare("=") == 0) {
-    return T_EQ;
-  }
-
-  if (match.compare("<>") == 0) {
-    return T_NE;
-  }
-
-  if (match.compare(">") == 0) {
-    return T_GR;
-  }
-
-  if (match.compare(">=") == 0) {
-    return T_GE;
-  }
-
-  if (match.compare("<") == 0) {
-    return T_LO;
-  }
-
-  if (match.compare("<=") == 0) {
-    return T_LE;
   }
 
   return 1;

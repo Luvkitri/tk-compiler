@@ -83,10 +83,25 @@ int SymbolTable::getSizeOfSymbolAt(int index) {
   return 0;
 }
 
+int SymbolTable::selectType(int firstIndex, int secondIndex) {
+  Symbol &firstSymbol = symTable.at(firstIndex);
+  Symbol &secondSymbol = symTable.at(secondIndex);
+
+  int type = T_INTEGER;
+
+  if (firstSymbol.type == T_REAL || secondSymbol.type == T_REAL) {
+    type = T_REAL;
+  }
+
+  return type;
+}
+
 void SymbolTable::display() {
   int i = 0;
 
   for (auto &symbol : symTable) {
+    if (symbol.token == T_ID) continue;
+
     cout << ";" << i++ << "\t";
 
     if (symbol.isGlobal) {
@@ -105,8 +120,6 @@ void SymbolTable::display() {
     } else if (symbol.token == T_LABEL) {
       cout << getTokenAsString(symbol.token) << "\t\t" << symbol.name << endl;
     } else if (symbol.token == T_PROC) {
-      cout << getTokenAsString(symbol.token) << "\t\t" << symbol.name << endl;
-    } else if (symbol.token == T_ID) {
       cout << getTokenAsString(symbol.token) << "\t\t" << symbol.name << endl;
     }
   }
