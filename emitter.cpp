@@ -56,7 +56,7 @@ void emitAssignment(int variableIndex, int assigneeIndex) {
   }
 
   if (commentsEnabled) {
-    writeToStream("\t\t;" + instruction + assignee.name + "," + variable.name,
+    writeToStream("\t\t\t;" + instruction + assignee.name + "," + variable.name,
                   commentsEnabled);
   }
 }

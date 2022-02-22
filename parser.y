@@ -152,7 +152,9 @@ statement:
   } T_ELSE statement {
     emitLabel($5);
   }
-  | T_WHILE expression T_DO statement
+  | T_WHILE expression T_DO statement {
+    
+  }
   ;
 variable:
   T_ID
@@ -230,7 +232,10 @@ simple_expression:
     $$ = symbolTable.insertTemp(symbolTable.selectType($1, $3));
     emitExpression($1, $3, $$, $2);
   }
-  | simple_expression T_OR term
+  | simple_expression T_OR term {
+    $$ = symbolTable.insertTemp(T_INTEGER);
+    emitExpression($1, $3, $$, $2);
+  }
   ;
 term:
   factor
