@@ -143,17 +143,30 @@ statement:
     int elseLabelIndex = symbolTable.insertLabel();
     int falseIndex = symbolTable.insertOrGet("0", T_NUM, T_INTEGER);
     emitRelopExpression($2, falseIndex, elseLabelIndex, T_EQ);
-    $2 = elseLabelIndex;
+    $$ = elseLabelIndex; // $3
   } T_THEN statement {
     int endConditionalLabelIndex = symbolTable.insertLabel();
     emitJump(endConditionalLabelIndex);
-    emitLabel($2);
-    $5 = endConditionalLabelIndex;
+    emitLabel($3);
+    $$ = endConditionalLabelIndex; // $6
   } T_ELSE statement {
-    emitLabel($5);
+    emitLabel($6);
   }
-  | T_WHILE expression T_DO statement {
-    
+  | T_WHILE {
+    // Out of loop label 
+    int loopFinishLabelIndex = symbolTable.insertLabel();
+    $$ = loopFinishLabelIndex; // $2
+
+    // Begin loop label
+    int loopStartLabelIndex = symbolTable.insertLabel();
+    $1 = loopStartLabelIndex;
+    emitLabel(loopStartLabelIndex);
+  } expression T_DO {
+    int falseIndex = symbolTable.insertOrGet("0", T_NUM, T_INTEGER);
+    emitRelopExpression($3, falseIndex, $2, T_EQ);
+  } statement {
+    emitJump($1);
+    emitLabel($2);
   }
   ;
 variable:

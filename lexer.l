@@ -46,6 +46,10 @@ ASSIGNOP                          ":="
 "if"                              { return T_IF; }
 "then"                            { return T_THEN; }
 "else"                            { return T_ELSE; }
+"do"                              { return T_DO; }
+"while"                           { return T_WHILE; }
+"function"                        { return T_FUN; }
+"procedure"                       { return T_PROC; }
 "not"                             { yylval = T_NOT; return T_NOT; }
 {OR}                              { yylval = T_OR; return T_OR; }
 {RELOP_EQ}                        { yylval = T_EQ; return T_RELOP; }
