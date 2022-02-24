@@ -12,12 +12,14 @@ SymbolTable::~SymbolTable() {}
 
 Symbol &SymbolTable::get(int index) { return symTable.at(index); }
 
-int SymbolTable::insert(string name, int token, int type) {
+int SymbolTable::insert(string name, int token, int type, int address,
+                        bool isReference) {
   Symbol symbol;
   symbol.name = name;
   symbol.type = type;
   symbol.token = token;
-  symbol.address = 0;
+  symbol.address = address;
+  symbol.isReference = isReference;
   symbol.isGlobal = isInGlobalScope;
 
   symTable.push_back(symbol);
@@ -51,9 +53,9 @@ int SymbolTable::insertLabel() {
 }
 
 int SymbolTable::lookup(string name) {
-  int size = (int)(symTable.size() - 1);
+  int index = (int)(symTable.size() - 1);
 
-  for (int index = 0; index <= size; index++) {
+  for (; index >= 0; index--) {
     if (symTable.at(index).name == name) {
       return index;
     }
@@ -64,17 +66,19 @@ int SymbolTable::lookup(string name) {
 
 void SymbolTable::allocate(int index) {
   Symbol &symbol = symTable.at(index);
-  // TODO handle non global allocation
   if (isInGlobalScope) {
     symbol.address = globalAddress;
     globalAddress += getSizeOfSymbolAt(index);
+  } else {
+    symbol.address = localAddress;
+    localAddress += getSizeOfSymbolAt(index);
   }
 }
 
 int SymbolTable::getSizeOfSymbolAt(int index) {
   Symbol &symbol = symTable.at(index);
 
-  if (symbol.type == T_INTEGER) {
+  if (symbol.type == T_INTEGER || symbol.isReference) {
     return 4;
   } else if (symbol.type == T_REAL) {
     return 8;
@@ -96,6 +100,21 @@ int SymbolTable::selectType(int firstIndex, int secondIndex) {
   return type;
 }
 
+void SymbolTable::eraseLocalSymbols() {
+  // Find start index for local symbols
+  int startIndex = 0;
+
+  for (auto &symbol : symTable) {
+    if (symbol.isGlobal == true) {
+      startIndex++;
+    }
+  }
+
+  // remove local symbols and set address to 0
+  symTable.erase(symTable.begin() + startIndex, symTable.end());
+  localAddress = 0;
+}
+
 void SymbolTable::display() {
   int i = 0;
 
@@ -110,7 +129,11 @@ void SymbolTable::display() {
       cout << "Local\t";
     }
 
-    if (symbol.token == T_NUM) {
+    if (symbol.isReference) {
+      cout << "reference" << getTokenAsString(symbol.token) << "\t\t"
+           << symbol.name << "\t" << getTokenAsString(symbol.type)
+           << "\toffset=" << symbol.address << endl;
+    } else if (symbol.token == T_NUM) {
       cout << getTokenAsString(symbol.token) << "\t\t" << symbol.name << "\t"
            << getTokenAsString(symbol.type) << endl;
     } else if (symbol.token == T_VAR) {
@@ -121,6 +144,9 @@ void SymbolTable::display() {
       cout << getTokenAsString(symbol.token) << "\t\t" << symbol.name << endl;
     } else if (symbol.token == T_PROC) {
       cout << getTokenAsString(symbol.token) << "\t\t" << symbol.name << endl;
+    } else if (symbol.token == T_FUN) {
+      cout << getTokenAsString(symbol.token) << "\t\t" << symbol.name << "\t"
+           << getTokenAsString(symbol.type) << endl;
     }
   }
 }

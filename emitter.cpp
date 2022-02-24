@@ -175,6 +175,64 @@ void emitWrite(int symbolIndex) {
   }
 }
 
+void emitPush(int symbolIndex) {
+  string instruction = "push.i ";
+
+  writeToStream("\t" + instruction + getSymbolRepresentation(symbolIndex),
+                !commentsEnabled);
+
+  if (commentsEnabled) {
+    writeToStream(
+        "\t\t;" + instruction + "&" + symbolTable.get(symbolIndex).name,
+        commentsEnabled);
+  }
+}
+
+void emitCall(int symbolIndex) {
+  string instruction = "call.i ";
+
+  writeToStream("\t" + instruction + getSymbolRepresentation(symbolIndex),
+                !commentsEnabled);
+
+  if (commentsEnabled) {
+    writeToStream(
+        "\t\t;" + instruction + "&" + symbolTable.get(symbolIndex).name,
+        commentsEnabled);
+  }
+}
+
+void emitIncsp(int incsp) {
+  string instruction = "incsp.i #" + to_string(incsp);
+
+  writeToStream("\t" + instruction, !commentsEnabled);
+
+  if (commentsEnabled) {
+    writeToStream("\t\t" + instruction, commentsEnabled);
+  }
+}
+
+void emitEnter() {
+  string instruction = "enter.i #{_}";
+
+  writeToStream("\t" + instruction, !commentsEnabled);
+
+  if (commentsEnabled) {
+    writeToStream("\t\t;" + instruction, !commentsEnabled);
+  }
+}
+
+void updateEnter(int reservedMemory) {
+  // Copy existing output
+  string stringOutput = output.str();
+
+  // Clear the current stream
+  output.str(string());
+
+  // Match replace missing data and write to output stream
+  regex re("{_}");
+  writeToStream(regex_replace(stringOutput, re, to_string(reservedMemory)), false);
+}
+
 string getSuffixByType(int type, bool tab) {
   string suffix;
 
@@ -197,7 +255,8 @@ string getSuffixByType(int type, bool tab) {
 string getSymbolRepresentation(int symbolIndex) {
   Symbol &symbol = symbolTable.get(symbolIndex);
 
-  if (symbol.token == T_NUM || symbol.token == T_LABEL) {
+  if (symbol.token == T_NUM || symbol.token == T_LABEL ||
+      symbol.token == T_FUN || symbol.token == T_PROC) {
     return "#" + symbol.name;
   } else if (symbol.token == T_VAR) {
     // TODO more to implement when functions come to play
@@ -259,6 +318,8 @@ string getTokenAsString(int token) {
       return "real";
     case T_PROC:
       return "procedure";
+    case T_FUN:
+      return "function";
     default:
       return "";
   }

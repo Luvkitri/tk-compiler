@@ -1,7 +1,13 @@
 %{
   #include "global.hpp"
 
+  // Global ids
   vector<int> ids;
+
+  // Procedure and Function
+  int stackReservedMemory;
+  vector<int> parameters;
+  vector<int> parametersTypes;
 %}
 
 %require "3.5.1"
@@ -108,19 +114,106 @@ subprogram_declarations:
   | %empty
   ;
 subprogram_declaration:
-  subprogram_head declarations compound_statement
+  subprogram_head declarations compound_statement {
+    // TODO finish function/procedure declaration
+    updateEnter()
+
+    emitLeave();
+    emitReturn();
+    
+    symbolTable.eraseLocalSymbols();
+    isInGlobalScope = true;
+  }
   ;
 subprogram_head:
-  T_FUN T_ID arguments ':' standard_type ';'
-  | T_PROC T_ID arguments ';'
+  T_FUN T_ID {
+    symbolTable.get($2).token = T_FUN;
+    isInGlobalScope = false;
+
+    // old BP | readdr | function return 
+    stackReservedMemory = 12;
+
+    // Emit function label
+    emitLabel($2);
+    emitEnter();
+
+    // Dispaly and clear symbol table
+    symbolTable.display();
+    symbolTable.clearLocalSymbols();
+  } arguments {
+    // Storing information about function parameters types for future reference
+    symbolTable.get($2).parametersTypes = parameterTypes;
+    parameterTypes.clear();
+  } ':' standard_type ';' {
+    // Set function return type
+    Symbol &functionID = symbolTable.get($2);
+    functionID.type = $6;
+
+    // Add function return variable to symbol table
+    int returnVariableIndex = symbolTable.insert(functionID.name, T_VAR, $6, 8, true);
+  }
+  | T_PROC T_ID {
+    symbolTable.get($2).token = T_PROC;
+    isInGlobalScope = false;
+
+    // old BP | readdr
+    stackReservedMemory = 8;
+
+    // Emit procedure label
+    emitLabel($2);
+    emitEnter();
+  } arguments ';' {
+    // Storing information about procedure parameters types for future reference
+    symbolTable.get($2).parametersTypes = parameterTypes;
+    parameterTypes.clear();
+  } 
   ;
 arguments:
-  '(' parameter_list ')'
+  '(' parameter_list ')' {
+    for (auto &parameterID : parameters) {
+      symbolTable.get(parameterID).address = stackReservedMemory;
+
+      // Function arguments are passed by reference which is 4 bytes
+      stackReservedMemory += 4;
+    }
+
+    paramters.clear();
+  }
   | %empty
   ;
 parameter_list:
-  identifier_list ':' type
-  | parameter_list ';' identifier_list ':' type
+  identifier_list ':' type {
+    for (auto &id : ids) {
+      Symbol &symbol = symbolTable.get(id);
+      symbol.isReference = true;
+      symbol.token = T_VAR;
+      symbol.type = $3
+
+      // Add paramter to current function paramters vector
+      paramters.push_back(id);
+
+      // Add parameter type
+      parametersTypes.push_back($3);
+    }
+
+    ids.clear();
+    symbolTable.display();
+  }
+  | parameter_list ';' identifier_list ':' type {
+    for (auto &id : ids) {
+      Symbol &symbol = symbolTable.get(id);
+      symbol.isReference = true;
+      symbol.token = T_VAR;
+      symbol.type = $5
+
+      // Add paramter index in symbol table
+      parameters.push_back(id);
+
+      // Add parameter type
+      parametersTypes.push_back($5);
+    }
+    ids.clear();
+  }
   ;
 compound_statement:
   T_BEGIN optional_statements T_END
@@ -183,6 +276,14 @@ procedure_statement:
     } else if ($1 == symbolTable.lookup("write")) {
       for (auto &id : ids) {
         emitWrite(id);
+      }
+    } else {
+      Symbol &symbol = symbolTable.get($1);
+
+      if (symbol.token == T_PROC) {
+        passParameters($1);
+      } else if (symbol.token == T_FUN) {
+        $$ = passParameters($1);
       }
     }
 
@@ -260,7 +361,13 @@ term:
   ;
 factor:
   variable
-  | T_ID '(' expression_list ')'
+  | T_ID '(' expression_list ')' {
+    if (symbolTable.get($1).token == T_FUN) {
+      $$ = passParameters($1);
+    } else {
+      yyerror("No such function");
+    }
+  }
   | T_NUM
   | '(' expression ')' {
     $$ = $2;
@@ -269,3 +376,44 @@ factor:
   ;
 
 %%
+
+int passArguments(int symbolIndex) {
+  Symbol &symbol = symbolTable.get(symbolIndex);
+  int incsp = 0;
+
+  for (int i = 0; i < ids.size(); i++) {
+    int argumentIndex = ids[i];
+    int functionParameterType = symbol.parametersTypes[i];
+
+    // Assign to temp if number is passed
+    if (symbolTable.get(parameterIndex).token == T_NUM) {
+      int tempIndex = symbolTable.insertTemp(functionParameterType);
+      emitAssignment(tempIndex, ids[i]);
+      argumentIndex = tempIndex;
+    }
+
+    // Check typing
+    if (symbolTable.get(argumentIndex).type != functionParameterType) {
+      yyerror("Incorrect type of passed paramater");
+    }
+
+    // Push arguments to function|procedure
+    emitPush(argumentIndex);
+    incsp += 4;
+  }
+
+  int returnIndex = 0;
+
+  // if arguments are passed to function create temp for storing the return value if also needs to be pushed
+  if (symbol.token == T_FUN) {
+    returnIndex = symbolTable.insertTemp(symbol.type);
+    emitPush(tempIndex);
+    incsp += 4;
+  }
+
+  emitCall(symbolIndex);
+  emitIncsp(incsp);
+  ids.clear();
+
+  return returnIndex;
+}
