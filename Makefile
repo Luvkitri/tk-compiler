@@ -1,5 +1,5 @@
-headers = global.hpp lexer.hpp logger.hpp main.hpp symbol.hpp parser.hpp error.hpp
-objects = error.o lexer.o main.o parser.o logger.o symbol.o emitter.o
+headers = global.hpp emitter.hpp lexer.hpp logger.hpp main.hpp symbol.hpp parser.hpp error.hpp 
+objects = emitter.o error.o lexer.o main.o parser.o logger.o symbol.o 
 flags = -Wall 
 
 output: $(objects)
@@ -23,14 +23,14 @@ error.o: error.cpp $(headers)
 symbol.o: symbol.cpp $(headers)
 	g++ -c $(flags) symbol.cpp
 
+emitter.o: emitter.cpp $(headers)
+	g++ -c $(flags) emitter.cpp
+
 lexer.o: lexer.cpp $(headers)
 	g++ -c $(flags) lexer.cpp
 
 parser.o: parser.cpp $(headers)
 	g++ -c $(flags) parser.cpp
-
-emitter.o: emitter.cpp $(headers)
-	g++ -c $(flags) emitter.cpp
 
 clean:
 	rm *.o output lexer.cpp parser.hpp parser.cpp

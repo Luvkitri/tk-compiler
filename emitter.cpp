@@ -24,10 +24,12 @@ void emitLabel(int labelIndex) {
 void emitJump(int labelIndex) {
   Symbol &label = symbolTable.get(labelIndex);
 
-  writeToStream("\tjump.i\t#" + label.name, !commentsEnabled);
+  string instuction("\tjump.i #" + label.name);
+  writeToStream(instuction, !commentsEnabled);
 
   if (commentsEnabled) {
-    writeToStream("\t\t\t;jump.i\t" + label.name, commentsEnabled);
+    string spaces(30 - instuction.length(), ' ');
+    writeToStream(spaces + ";jump.i " + label.name, commentsEnabled);
   }
 }
 
@@ -36,28 +38,33 @@ void emitAssignment(int variableIndex, int assigneeIndex) {
   Symbol &assignee = symbolTable.get(assigneeIndex);
 
   string instruction;
+  string assignment;
 
   if (variable.type == assignee.type) {
-    instruction = "mov." + getSuffixByType(assignee.type, true);
-    writeToStream("\t" + instruction + getSymbolRepresentation(assigneeIndex) +
-                      "," + getSymbolRepresentation(variableIndex),
-                  !commentsEnabled);
-  } else if (variable.type == T_REAL && assignee.type == T_INTEGER) {
-    instruction = "inttoreal." + getSuffixByType(assignee.type, false);
-    writeToStream("\t" + instruction + getSymbolRepresentation(assigneeIndex) +
-                      "," + getSymbolRepresentation(variableIndex),
-                  !commentsEnabled);
+    instruction = "mov." + getSuffixByType(assignee.type);
+    assignment = "\t" + instruction + getSymbolRepresentation(assigneeIndex) +
+                 "," + getSymbolRepresentation(variableIndex);
 
+    writeToStream(assignment, !commentsEnabled);
+  } else if (variable.type == T_REAL && assignee.type == T_INTEGER) {
+    instruction = "inttoreal." + getSuffixByType(assignee.type);
+    assignment = "\t" + instruction + getSymbolRepresentation(assigneeIndex) +
+                 "," + getSymbolRepresentation(variableIndex);
+
+    writeToStream(assignment, !commentsEnabled);
   } else if (variable.type == T_INTEGER && assignee.type == T_REAL) {
-    instruction = "realtoint." + getSuffixByType(assignee.type, false);
-    writeToStream("\t" + instruction + getSymbolRepresentation(assigneeIndex) +
-                      "," + getSymbolRepresentation(variableIndex),
-                  !commentsEnabled);
+    instruction = "realtoint." + getSuffixByType(assignee.type);
+    assignment = "\t" + instruction + getSymbolRepresentation(assigneeIndex) +
+                 "," + getSymbolRepresentation(variableIndex);
+
+    writeToStream(assignment, !commentsEnabled);
   }
 
   if (commentsEnabled) {
-    writeToStream("\t\t\t;" + instruction + assignee.name + "," + variable.name,
-                  commentsEnabled);
+    string spaces(30 - assignment.length(), ' ');
+    writeToStream(
+        spaces + ";" + instruction + assignee.name + "," + variable.name,
+        commentsEnabled);
   }
 }
 
@@ -67,16 +74,18 @@ void emitExpression(int firstIndex, int secondIndex, int outputIndex, int op) {
   Symbol &output = symbolTable.get(outputIndex);
 
   string instruction =
-      getInstructionByOperator(op) + "." + getSuffixByType(output.type, true);
+      getInstructionByOperator(op) + "." + getSuffixByType(output.type);
 
-  writeToStream("\t" + instruction + getSymbolRepresentation(firstIndex) + "," +
-                    getSymbolRepresentation(secondIndex) + "," +
-                    getSymbolRepresentation(outputIndex),
-                !commentsEnabled);
+  string expression("\t" + instruction + getSymbolRepresentation(firstIndex) +
+                    "," + getSymbolRepresentation(secondIndex) + "," +
+                    getSymbolRepresentation(outputIndex));
+
+  writeToStream(expression, !commentsEnabled);
 
   if (commentsEnabled) {
-    writeToStream("\t\t;" + instruction + first.name + "," + second.name + "," +
-                      output.name,
+    string spaces(30 - expression.length(), ' ');
+    writeToStream(spaces + ";" + instruction + first.name + "," + second.name +
+                      "," + output.name,
                   commentsEnabled);
   }
 }
@@ -85,38 +94,50 @@ void emitCastTo(int &firstIndex, int &secondIndex) {
   Symbol &first = symbolTable.get(firstIndex);
   Symbol &second = symbolTable.get(secondIndex);
 
+  int tempIndex = 0;
+
+  bool firstHasBeenCasted = false;
+  bool secondHasBeenCasted = false;
   string instruction;
+  string cast;
 
   if (first.type == T_INTEGER && second.type == T_REAL) {
-    int tempIndex = symbolTable.insertTemp(T_REAL);
-    Symbol &temp = symbolTable.get(tempIndex);
+    tempIndex = symbolTable.insertTemp(T_REAL);
 
-    instruction = "inttoreal." + getSuffixByType(T_INTEGER, false);
-    writeToStream("\t" + instruction + getSymbolRepresentation(firstIndex) +
-                      ',' + getSymbolRepresentation(tempIndex),
-                  !commentsEnabled);
+    instruction = "inttoreal." + getSuffixByType(T_INTEGER);
+    cast = "\t" + instruction + getSymbolRepresentation(firstIndex) + ',' +
+           getSymbolRepresentation(tempIndex);
 
-    if (commentsEnabled) {
-      writeToStream("\t\t;" + instruction + first.name + "," + temp.name,
-                    commentsEnabled);
-    }
+    writeToStream(cast, !commentsEnabled);
 
     firstIndex = tempIndex;
+    firstHasBeenCasted = true;
   } else if (first.type == T_REAL && second.type == T_INTEGER) {
-    int tempIndex = symbolTable.insertTemp(T_REAL);
-    Symbol &temp = symbolTable.get(tempIndex);
+    tempIndex = symbolTable.insertTemp(T_REAL);
 
-    instruction = "inttoreal." + getSuffixByType(T_INTEGER, false);
-    writeToStream("\t" + instruction + getSymbolRepresentation(secondIndex) +
-                      ',' + getSymbolRepresentation(tempIndex),
-                  !commentsEnabled);
+    instruction = "inttoreal." + getSuffixByType(T_INTEGER);
+    cast = "\t" + instruction + getSymbolRepresentation(secondIndex) + ',' +
+           getSymbolRepresentation(tempIndex);
 
-    if (commentsEnabled) {
-      writeToStream("\t\t;" + instruction + first.name + "," + temp.name,
-                    commentsEnabled);
-    }
+    writeToStream(cast, !commentsEnabled);
 
     secondIndex = tempIndex;
+    secondHasBeenCasted = true;
+  }
+
+  if ((firstHasBeenCasted || secondHasBeenCasted) && commentsEnabled) {
+    Symbol &temp = symbolTable.get(tempIndex);
+    string spaces(30 - cast.length(), ' ');
+    string symbolName;
+
+    if (firstHasBeenCasted) {
+      symbolName = first.name;
+    } else if (secondHasBeenCasted) {
+      symbolName = second.name;
+    }
+
+    writeToStream(spaces + ";" + instruction + symbolName + "," + temp.name,
+                  commentsEnabled);
   }
 }
 
@@ -132,17 +153,19 @@ void emitRelopExpression(int leftSymbolIndex, int rightSymbolIndex,
     suffixType = T_REAL;
   }
 
-  string instruction =
-      getInstructionByOperator(op) + "." + getSuffixByType(suffixType, true);
+  string instruction("\t" + getInstructionByOperator(op) + "." +
+                     getSuffixByType(suffixType) +
+                     getSymbolRepresentation(leftSymbolIndex) + "," +
+                     getSymbolRepresentation(rightSymbolIndex) + "," +
+                     getSymbolRepresentation(labelIndex));
 
-  writeToStream("\t" + instruction + getSymbolRepresentation(leftSymbolIndex) +
-                    "," + getSymbolRepresentation(rightSymbolIndex) + "," +
-                    getSymbolRepresentation(labelIndex),
-                !commentsEnabled);
+  writeToStream(instruction, !commentsEnabled);
 
   if (commentsEnabled) {
-    writeToStream("\t\t;" + instruction + left.name + "," + right.name + "," +
-                      jumpLabel.name,
+    string spaces(30 - instruction.length(), ' ');
+    writeToStream(spaces + ";" + getInstructionByOperator(op) + "." +
+                      getSuffixByType(suffixType) + left.name + "," +
+                      right.name + "," + jumpLabel.name,
                   commentsEnabled);
   }
 }
@@ -150,13 +173,15 @@ void emitRelopExpression(int leftSymbolIndex, int rightSymbolIndex,
 void emitRead(int symbolIndex) {
   Symbol &symbol = symbolTable.get(symbolIndex);
 
-  writeToStream("\tread." + getSuffixByType(symbol.type, false) +
-                    getSymbolRepresentation(symbolIndex),
-                !commentsEnabled);
+  string instruction("\tread." + getSuffixByType(symbol.type) +
+                     getSymbolRepresentation(symbolIndex));
+
+  writeToStream(instruction, !commentsEnabled);
 
   if (commentsEnabled) {
+    string spaces(30 - instruction.length(), ' ');
     writeToStream(
-        "\t\t\t;read." + getSuffixByType(symbol.type, false) + symbol.name,
+        spaces + ";read." + getSuffixByType(symbol.type) + symbol.name,
         commentsEnabled);
   }
 }
@@ -164,60 +189,96 @@ void emitRead(int symbolIndex) {
 void emitWrite(int symbolIndex) {
   Symbol &symbol = symbolTable.get(symbolIndex);
 
-  writeToStream("\twrite." + getSuffixByType(symbol.type, false) +
-                    getSymbolRepresentation(symbolIndex),
-                !commentsEnabled);
+  string instruction("\twrite." + getSuffixByType(symbol.type) +
+                     getSymbolRepresentation(symbolIndex));
+
+  writeToStream(instruction, !commentsEnabled);
 
   if (commentsEnabled) {
+    string spaces(30 - instruction.length(), ' ');
     writeToStream(
-        "\t\t\t;write." + getSuffixByType(symbol.type, false) + symbol.name,
+        spaces + ";write." + getSuffixByType(symbol.type) + symbol.name,
         commentsEnabled);
   }
 }
 
 void emitPush(int symbolIndex) {
-  string instruction = "push.i ";
+  string instruction("\tpush.i " + getSymbolRepresentation(symbolIndex, true));
 
-  writeToStream("\t" + instruction + getSymbolRepresentation(symbolIndex),
-                !commentsEnabled);
+  cout << "push " << to_string(symbolIndex) << endl;
+  cout << instruction << endl;
+  writeToStream(instruction, !commentsEnabled);
 
   if (commentsEnabled) {
-    writeToStream(
-        "\t\t;" + instruction + "&" + symbolTable.get(symbolIndex).name,
-        commentsEnabled);
+    string spaces(30 - instruction.length(), ' ');
+    writeToStream(spaces + ";push.i " + "&" + symbolTable.get(symbolIndex).name,
+                  commentsEnabled);
   }
 }
 
 void emitCall(int symbolIndex) {
-  string instruction = "call.i ";
+  string instruction("\tcall.i " + getSymbolRepresentation(symbolIndex));
 
-  writeToStream("\t" + instruction + getSymbolRepresentation(symbolIndex),
-                !commentsEnabled);
+  writeToStream(instruction, !commentsEnabled);
 
   if (commentsEnabled) {
-    writeToStream(
-        "\t\t;" + instruction + "&" + symbolTable.get(symbolIndex).name,
-        commentsEnabled);
+    string spaces(30 - instruction.length(), ' ');
+    writeToStream(spaces + ";call.i " + "&" + symbolTable.get(symbolIndex).name,
+                  commentsEnabled);
   }
 }
 
 void emitIncsp(int incsp) {
-  string instruction = "incsp.i #" + to_string(incsp);
+  string instruction("\tincsp.i #" + to_string(incsp));
 
-  writeToStream("\t" + instruction, !commentsEnabled);
+  writeToStream(instruction, !commentsEnabled);
 
   if (commentsEnabled) {
-    writeToStream("\t\t" + instruction, commentsEnabled);
+    string spaces(30 - instruction.length(), ' ');
+    writeToStream(spaces + ";incsp.i " + to_string(incsp), commentsEnabled);
   }
 }
 
 void emitEnter() {
-  string instruction = "enter.i #{_}";
+  string instruction = "\tenter.i #{_}";
 
-  writeToStream("\t" + instruction, !commentsEnabled);
+  writeToStream(instruction, !commentsEnabled);
 
   if (commentsEnabled) {
-    writeToStream("\t\t;" + instruction, !commentsEnabled);
+    string spaces(30 - instruction.length(), ' ');
+    writeToStream(spaces + ";enter.i {_}", commentsEnabled);
+  }
+}
+
+void emitLeave() {
+  string instruction = "\tleave";
+
+  writeToStream(instruction, !commentsEnabled);
+
+  if (commentsEnabled) {
+    string spaces(30 - instruction.length(), ' ');
+    writeToStream(spaces + ";leave", commentsEnabled);
+  }
+}
+
+void emitReturn() {
+  string instruction = "\treturn";
+
+  writeToStream(instruction, !commentsEnabled);
+
+  if (commentsEnabled) {
+    string spaces(30 - instruction.length(), ' ');
+    writeToStream(spaces + ";return", commentsEnabled);
+  }
+}
+
+void emitExit() {
+  string instruction = "\texit";
+  writeToStream(instruction, !commentsEnabled);
+
+  if (commentsEnabled) {
+    string spaces(30 - instruction.length(), ' ');
+    writeToStream(spaces + ";exit", commentsEnabled);
   }
 }
 
@@ -229,11 +290,12 @@ void updateEnter(int reservedMemory) {
   output.str(string());
 
   // Match replace missing data and write to output stream
-  regex re("{_}");
-  writeToStream(regex_replace(stringOutput, re, to_string(reservedMemory)), false);
+  const regex re("\\{_\\}");
+  writeToStream(regex_replace(stringOutput, re, to_string(reservedMemory)),
+                false);
 }
 
-string getSuffixByType(int type, bool tab) {
+string getSuffixByType(int type) {
   string suffix;
 
   if (type == T_INTEGER) {
@@ -245,29 +307,43 @@ string getSuffixByType(int type, bool tab) {
     return "";
   }
 
-  if (tab) {
-    return suffix + "\t";
-  }
-
   return suffix + " ";
 }
 
-string getSymbolRepresentation(int symbolIndex) {
+string getSymbolRepresentation(int symbolIndex, bool asAddress) {
   Symbol &symbol = symbolTable.get(symbolIndex);
 
   if (symbol.token == T_NUM || symbol.token == T_LABEL ||
       symbol.token == T_FUN || symbol.token == T_PROC) {
     return "#" + symbol.name;
   } else if (symbol.token == T_VAR) {
-    // TODO more to implement when functions come to play
-    return to_string(symbol.address);
+    string representation = "";
+
+    if (!symbol.isReference && asAddress) {
+      representation += "#";
+    }
+
+    if (symbol.isReference) {
+      representation += "*";
+    }
+
+    if (!symbol.isGlobal) {
+      representation += "BP";
+    }
+
+    if (!symbol.isGlobal && symbol.address > 0) {
+      representation += "+";
+    }
+
+    representation += to_string(symbol.address);
+
+    return representation;
   }
 
   return "";
 }
 
 string getInstructionByOperator(int op) {
-  // TODO Add remaining instructions
   switch (op) {
     case T_ADD:
       return "add";
@@ -302,7 +378,6 @@ string getInstructionByOperator(int op) {
 }
 
 string getTokenAsString(int token) {
-  // TODO Add remaining tokens
   switch (token) {
     case T_ID:
       return "id";

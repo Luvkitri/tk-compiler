@@ -13,9 +13,13 @@ void emitWrite(int);
 void emitPush(int);
 void emitCall(int);
 void emitIncsp(int);
+void emitLeave();
+void emitReturn();
+void emitEnter();
+void emitExit();
+void updateEnter(int);
 
-
-string getSuffixByType(int, bool);
-string getSymbolRepresentation(int);
+string getSuffixByType(int);
+string getSymbolRepresentation(int, bool = false);
 string getInstructionByOperator(int);
 string getTokenAsString(int);

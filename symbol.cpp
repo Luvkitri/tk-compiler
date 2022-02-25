@@ -70,8 +70,8 @@ void SymbolTable::allocate(int index) {
     symbol.address = globalAddress;
     globalAddress += getSizeOfSymbolAt(index);
   } else {
+    localAddress -= getSizeOfSymbolAt(index);
     symbol.address = localAddress;
-    localAddress += getSizeOfSymbolAt(index);
   }
 }
 
@@ -130,7 +130,7 @@ void SymbolTable::display() {
     }
 
     if (symbol.isReference) {
-      cout << "reference" << getTokenAsString(symbol.token) << "\t\t"
+      cout << "reference " << getTokenAsString(symbol.token) << "\t"
            << symbol.name << "\t" << getTokenAsString(symbol.type)
            << "\toffset=" << symbol.address << endl;
     } else if (symbol.token == T_NUM) {
@@ -145,7 +145,7 @@ void SymbolTable::display() {
     } else if (symbol.token == T_PROC) {
       cout << getTokenAsString(symbol.token) << "\t\t" << symbol.name << endl;
     } else if (symbol.token == T_FUN) {
-      cout << getTokenAsString(symbol.token) << "\t\t" << symbol.name << "\t"
+      cout << getTokenAsString(symbol.token) << "\t" << symbol.name << "\t"
            << getTokenAsString(symbol.type) << endl;
     }
   }

@@ -14,13 +14,13 @@ struct Symbol {
 
 class SymbolTable {
   int numberOfTemps = 0;
-  int globalAddress = 0;
-  int localAddress = 0;
   int labelCount = 0;
 
   vector<Symbol> symTable;
 
  public:
+  int globalAddress = 0;
+  int localAddress = 0;
   SymbolTable();
   ~SymbolTable();
   Symbol& get(int index);
