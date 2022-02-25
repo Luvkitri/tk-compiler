@@ -5,6 +5,9 @@
 #include <string>
 #include <vector>
 #include <regex>
+#include <csignal>
+
+#define BREAKPOINT // raise(SIGINT);
 
 using namespace std;
 

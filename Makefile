@@ -1,12 +1,12 @@
 headers = global.hpp emitter.hpp lexer.hpp logger.hpp main.hpp symbol.hpp parser.hpp error.hpp 
 objects = emitter.o error.o lexer.o main.o parser.o logger.o symbol.o 
-flags = -Wall 
+flags = -Wall -g
 
 output: $(objects)
 	g++ $(flags) $(objects) -o output 
 
 parser.cpp parser.hpp: parser.y
-	bison -d -o parser.cpp parser.y
+	bison -g -d -o parser.cpp parser.y
 
 lexer.cpp: lexer.l $(headers)
 	flex -o lexer.cpp lexer.l

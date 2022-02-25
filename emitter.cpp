@@ -205,8 +205,6 @@ void emitWrite(int symbolIndex) {
 void emitPush(int symbolIndex) {
   string instruction("\tpush.i " + getSymbolRepresentation(symbolIndex, true));
 
-  cout << "push " << to_string(symbolIndex) << endl;
-  cout << instruction << endl;
   writeToStream(instruction, !commentsEnabled);
 
   if (commentsEnabled) {
@@ -323,7 +321,7 @@ string getSymbolRepresentation(int symbolIndex, bool asAddress) {
       representation += "#";
     }
 
-    if (symbol.isReference) {
+    if (symbol.isReference && !asAddress) {
       representation += "*";
     }
 

@@ -55,8 +55,28 @@ int SymbolTable::insertLabel() {
 int SymbolTable::lookup(string name) {
   int index = (int)(symTable.size() - 1);
 
+  if (isInGlobalScope) {
+    for (; index >= 0; index--) {
+      if (symTable.at(index).name == name) {
+        return index;
+      }
+    }
+  } else {
+    for (; index >= 0; index--) {
+      if (symTable.at(index).name == name && !symbolTable.get(index).isGlobal) {
+        return index;
+      }
+    }
+  }
+
+  return -1;
+}
+
+int SymbolTable::lookupFunction(string name) {
+  int index = (int)(symTable.size() - 1);
+
   for (; index >= 0; index--) {
-    if (symTable.at(index).name == name) {
+    if (symTable.at(index).name == name && symbolTable.get(index).isGlobal) {
       return index;
     }
   }
@@ -117,6 +137,8 @@ void SymbolTable::eraseLocalSymbols() {
 
 void SymbolTable::display() {
   int i = 0;
+
+  cout << ";Symbol table dumb" << endl;
 
   for (auto &symbol : symTable) {
     if (symbol.token == T_ID) continue;

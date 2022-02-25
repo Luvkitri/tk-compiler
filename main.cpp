@@ -4,10 +4,10 @@ ofstream outputStream;
 SymbolTable symbolTable;
 bool isInGlobalScope = true;
 bool commentsEnabled = true;
-extern int yydebug;
+// extern int yydebug;
 
 int main(int argc, char *argv[]) {
-  yydebug = 1;
+  // yydebug = 1;
 
   if (argc < 2) {
     errorLog("Missing key argument: <inputPath>");
