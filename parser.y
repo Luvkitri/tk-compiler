@@ -67,20 +67,22 @@ program:
   ;
 identifier_list:
   T_ID {
-    ids.push_back($1);
+    Symbol &symbol = symbolTable.get($1);
+    if (symbol.name != "input" && symbol.name != "output" && symbol.name != "inp" && symbol.name != "out") {
+      ids.push_back($1);
+    }
   }
   | identifier_list ',' T_ID {
-    ids.push_back($3);
+    Symbol &symbol = symbolTable.get($3);
+    if (symbol.name != "input" && symbol.name != "output" && symbol.name != "inp" && symbol.name != "out") {
+      ids.push_back($3);
+    }
   }
   ;
 declarations:
   declarations T_VAR identifier_list ':' type ';' {
     for (auto &id : ids) {
       Symbol &symbol = symbolTable.get(id);
-      
-      if (symbol.name == "input" || symbol.name == "output") {
-        continue;
-      }
 
       if ($5 == T_INTEGER) {
         symbol.token = T_VAR;
@@ -114,7 +116,9 @@ subprogram_declarations:
   | %empty
   ;
 subprogram_declaration:
-  subprogram_head declarations compound_statement {
+  subprogram_head declarations {
+    isInDeclarationState = false;
+  } compound_statement {
     updateEnter(symbolTable.localAddress * -1);
 
     emitLeave();
@@ -124,6 +128,7 @@ subprogram_declaration:
     symbolTable.display();
     symbolTable.eraseLocalSymbols();
     isInGlobalScope = true;
+    isInDeclarationState = true;
   }
   ;
 subprogram_head:
@@ -167,11 +172,14 @@ subprogram_head:
   ;
 arguments:
   '(' parameter_list ')' {
-    for (auto &parameterID : parameters) {
-      symbolTable.get(parameterID).address = stackReservedMemory;
+    BREAKPOINT;
+    int index = (int)(parameters.size() - 1);
+    stackReservedMemory += (4 * index);
+    for (; index >= 0; index--) {
+      symbolTable.get(parameters[index]).address = stackReservedMemory;
 
       // Function arguments are passed by reference which is 4 bytes
-      stackReservedMemory += 4;
+      stackReservedMemory -= 4;
     }
 
     parameters.clear();
@@ -180,7 +188,11 @@ arguments:
   ;
 parameter_list:
   identifier_list ':' type {
-    for (auto &id : ids) {
+    BREAKPOINT;
+    int index = (int)(ids.size() - 1);
+
+    for (; index >= 0; index--) {
+      int id = ids[index];
       Symbol &symbol = symbolTable.get(id);
       symbol.isReference = true;
       symbol.token = T_VAR;
@@ -195,18 +207,28 @@ parameter_list:
     ids.clear();
   }
   | parameter_list ';' identifier_list ':' type {
-    for (auto &id : ids) {
+    BREAKPOINT;
+    int index = (int)(ids.size() - 1);
+    vector<int> tempIds;
+
+    for (; index >= 0; index--) {
+      int id = ids[index];
       Symbol &symbol = symbolTable.get(id);
       symbol.isReference = true;
       symbol.token = T_VAR;
       symbol.type = $5;
 
-      // Add paramter index in symbol table
-      parameters.push_back(id);
-
+      tempIds.push_back(id);
+      
       // Add parameter type
       parametersTypes.push_back($5);
     }
+
+    // Add paramter index in symbol table
+    tempIds.insert(tempIds.end(), parameters.begin(), parameters.end());
+    parameters = tempIds;
+
+
     ids.clear();
   }
   ;
@@ -223,6 +245,7 @@ statement_list:
   ;
 statement:
   variable T_ASSIGN expression {
+    BREAKPOINT;
     if ($3 == -1) {
       vector<int> &currentIds = idsStack.back();
       $3 = currentIds.back();
@@ -270,7 +293,9 @@ statement:
   }
   ;
 variable:
-  T_ID
+  T_ID {
+
+  }
   | T_ID '[' expression ']'
   ;
 procedure_statement:
@@ -307,6 +332,7 @@ procedure_statement:
       }
       idsStack.pop_back();
     } else if ($1 == symbolTable.lookup("write")) {
+      BREAKPOINT;
       vector<int> &currentIds = idsStack.back();
       for (auto &id : currentIds) {
         emitWrite(id);
@@ -405,6 +431,7 @@ term:
   ;
 factor:
   variable {
+    BREAKPOINT;
     Symbol &symbol = symbolTable.get($1);
     int incsp = 0;
 
@@ -490,22 +517,23 @@ int passArguments(int symbolIndex) {
     Symbol symbol = symbolTable.getCopy(symbolIndex);
     int incsp = 0;
     vector<int> &currentIds = idsStack.back();
-    int index = (int)(currentIds.size() - 1);
+    int index = 0;
 
-    for (; index >= 0; index--) {
-      int argumentIndex = currentIds[index];
+    for (auto &currentId : currentIds) {
+      int argumentIndex = currentId;
       int functionParameterType = symbol.parametersTypes[index];
 
       // Assign to temp if number is passed
       if (symbolTable.get(argumentIndex).token == T_NUM || (symbolTable.get(argumentIndex).token == T_VAR && symbolTable.get(argumentIndex).type != functionParameterType)) {
         int tempIndex = symbolTable.insertTemp(functionParameterType);
-        emitAssignment(tempIndex, currentIds[index]);
+        emitAssignment(tempIndex, currentId);
         argumentIndex = tempIndex;
       }
 
       // Push arguments to function|procedure
       emitPush(argumentIndex);
       incsp += 4;
+      index += 1;
     }
 
     int returnIndex = 0;

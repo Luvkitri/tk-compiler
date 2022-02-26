@@ -12,7 +12,7 @@ SymbolTable::~SymbolTable() {}
 
 Symbol &SymbolTable::get(int index) { return symTable.at(index); }
 
-Symbol SymbolTable::getCopy(int index) {return symTable.at(index); }
+Symbol SymbolTable::getCopy(int index) { return symTable.at(index); }
 
 int SymbolTable::insert(string name, int token, int type, int address,
                         bool isReference) {
@@ -59,7 +59,7 @@ int SymbolTable::lookup(string name) {
 
   if (isInGlobalScope) {
     for (; index >= 0; index--) {
-      if (symTable.at(index).name == name) {
+      if (symTable.at(index).name == name && symbolTable.get(index).isGlobal) {
         return index;
       }
     }
@@ -67,6 +67,14 @@ int SymbolTable::lookup(string name) {
     for (; index >= 0; index--) {
       if (symTable.at(index).name == name && !symbolTable.get(index).isGlobal) {
         return index;
+      }
+    }
+
+    if (!isInDeclarationState) {
+      for (int index = 0; index < (int)(symTable.size() - 1); index++) {
+        if (symTable.at(index).name == name) {
+          return index;
+        }
       }
     }
   }

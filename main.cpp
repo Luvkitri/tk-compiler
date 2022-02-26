@@ -4,6 +4,7 @@ ofstream outputStream;
 SymbolTable symbolTable;
 bool isInGlobalScope = true;
 bool commentsEnabled = true;
+bool isInDeclarationState = true;
 // extern int yydebug;
 
 int main(int argc, char *argv[]) {

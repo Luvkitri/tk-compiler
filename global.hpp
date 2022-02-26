@@ -7,7 +7,7 @@
 #include <regex>
 #include <csignal>
 
-#define BREAKPOINT raise(SIGINT);
+#define BREAKPOINT // raise(SIGINT);
 
 using namespace std;
 
@@ -21,6 +21,7 @@ using namespace std;
 
 extern bool commentsEnabled;
 extern bool isInGlobalScope;
+extern bool isInDeclarationState;
 extern SymbolTable symbolTable;
 extern ofstream outputStream;
 extern FILE *yyin;
