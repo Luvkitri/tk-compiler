@@ -5,6 +5,8 @@
   // Global ids
   vector<int> ids;
 
+  vector<vector<int>> idsStack;
+
   // Procedure and Function
   int stackReservedMemory;
   vector<int> parameters;
@@ -126,7 +128,6 @@ subprogram_declaration:
   ;
 subprogram_head:
   T_FUN T_ID {
-    BREAKPOINT;
     symbolTable.get($2).token = T_FUN;
     isInGlobalScope = false;
 
@@ -137,12 +138,10 @@ subprogram_head:
     emitLabel($2);
     emitEnter();
   } arguments {
-    BREAKPOINT;
     // Storing information about function parameters types for future reference
     symbolTable.get($2).parametersTypes = parametersTypes;
     parametersTypes.clear();
   } ':' standard_type ';' {
-    BREAKPOINT;
     // Set function return type
     Symbol &functionID = symbolTable.get($2);
     functionID.type = $7;
@@ -224,6 +223,12 @@ statement_list:
   ;
 statement:
   variable T_ASSIGN expression {
+    if ($3 == -1) {
+      vector<int> &currentIds = idsStack.back();
+      $3 = currentIds.back();
+      idsStack.pop_back();
+    } 
+
     emitAssignment($1, $3);
   }
   | procedure_statement
@@ -291,14 +296,22 @@ procedure_statement:
   }
   | T_ID '(' expression_list ')' {
     BREAKPOINT;
+    if (!ids.empty()) {
+      idsStack.push_back(ids);
+    }
+
     if ($1 == symbolTable.lookup("read")) {
-      for (auto &id : ids) {
+      vector<int> &currentIds = idsStack.back();
+      for (auto &id : currentIds) {
         emitRead(id);
       }
+      idsStack.pop_back();
     } else if ($1 == symbolTable.lookup("write")) {
-      for (auto &id : ids) {
+      vector<int> &currentIds = idsStack.back();
+      for (auto &id : currentIds) {
         emitWrite(id);
       }
+      idsStack.pop_back();
     } else {
       Symbol &symbol = symbolTable.get($1);
       int functionIndex = symbolTable.lookupFunction(symbol.name);
@@ -313,16 +326,20 @@ procedure_statement:
         $$ = passArguments(functionIndex);
       }
     }
-
+    
     ids.clear();
   }
   ;
 expression_list:
   expression {
-    ids.push_back($1);
+    if ($1 != -1) {
+      ids.push_back($1);
+    }
   }
   | expression_list ',' expression {
-    ids.push_back($3);
+    if ($1 != -1) {
+      ids.push_back($3);
+    }
   }
   ;
 expression:
@@ -389,31 +406,49 @@ term:
 factor:
   variable {
     Symbol &symbol = symbolTable.get($1);
+    int incsp = 0;
 
     if (symbol.token == T_FUN) {
-      $$ = passArguments($1);
+      int returnIndex = symbolTable.insertTemp(symbol.type);
+      emitPush(returnIndex);
+      incsp += 4;
+      emitCall($1);
+      emitIncsp(incsp);
+
+      // Push return index to stack
+      ids.push_back(returnIndex);
+      idsStack.push_back(ids);
+      ids.clear();
+
+      $$ = -1;
     }
   }
   | T_ID '(' expression_list ')' {
     BREAKPOINT;
-    cout << symbolTable.get($1).isGlobal << endl;
-    cout << symbolTable.get($1).token << " " << $1 << endl;
-    cout << symbolTable.get($1).name << endl;
-
+    if (!ids.empty()) {
+      idsStack.push_back(ids);
+    }
     Symbol &symbol = symbolTable.get($1);
 
     int functionIndex = symbolTable.lookupFunction(symbol.name);
 
     if (functionIndex != -1) {
       if (symbolTable.get(functionIndex).token == T_FUN) {
-        $$ = passArguments(functionIndex);
+        int returnIndex = passArguments(functionIndex);
+        if (!idsStack.empty()) {
+          vector<int> &currentIds = idsStack.back();
+          currentIds.push_back(returnIndex);
+        } else {
+          ids.push_back(returnIndex);
+          idsStack.push_back(ids);
+          ids.clear();
+        }
+        
+        $$ = -1;
       } 
     } else {
       yyerror("No such function");
     }
-
-
-    
   }
   | T_NUM
   | '(' expression ')' {
@@ -452,18 +487,19 @@ factor:
 %%
 
 int passArguments(int symbolIndex) {
-    Symbol &symbol = symbolTable.get(symbolIndex);
+    Symbol symbol = symbolTable.getCopy(symbolIndex);
     int incsp = 0;
-    int index = (int)(ids.size() - 1);
+    vector<int> &currentIds = idsStack.back();
+    int index = (int)(currentIds.size() - 1);
 
     for (; index >= 0; index--) {
-      int argumentIndex = ids[index];
+      int argumentIndex = currentIds[index];
       int functionParameterType = symbol.parametersTypes[index];
 
       // Assign to temp if number is passed
       if (symbolTable.get(argumentIndex).token == T_NUM || (symbolTable.get(argumentIndex).token == T_VAR && symbolTable.get(argumentIndex).type != functionParameterType)) {
         int tempIndex = symbolTable.insertTemp(functionParameterType);
-        emitAssignment(tempIndex, index);
+        emitAssignment(tempIndex, currentIds[index]);
         argumentIndex = tempIndex;
       }
 
@@ -483,6 +519,7 @@ int passArguments(int symbolIndex) {
 
     emitCall(symbolIndex);
     emitIncsp(incsp);
+    idsStack.pop_back();
     ids.clear();
 
     return returnIndex;

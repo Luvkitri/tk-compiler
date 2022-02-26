@@ -7,7 +7,7 @@
 #include <regex>
 #include <csignal>
 
-#define BREAKPOINT // raise(SIGINT);
+#define BREAKPOINT raise(SIGINT);
 
 using namespace std;
 

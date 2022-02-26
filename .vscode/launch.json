@@ -10,7 +10,7 @@
           "request": "launch",
           "program": "${workspaceFolder}/output",
           "args": [
-              "../example-compiler/test.pas",
+              "../tests/pascal/func_proc.pas",
               "output.asm"
           ],
           "stopAtEntry": false,

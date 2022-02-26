@@ -40,6 +40,9 @@ void emitAssignment(int variableIndex, int assigneeIndex) {
   string instruction;
   string assignment;
 
+  cout << "Variable" << variable.name << " " << variable.token << endl;
+  cout << "Assignee" << assignee.name << " " << assignee.token << endl;
+
   if (variable.type == assignee.type) {
     instruction = "mov." + getSuffixByType(assignee.type);
     assignment = "\t" + instruction + getSymbolRepresentation(assigneeIndex) +

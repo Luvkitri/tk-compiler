@@ -12,6 +12,8 @@ SymbolTable::~SymbolTable() {}
 
 Symbol &SymbolTable::get(int index) { return symTable.at(index); }
 
+Symbol SymbolTable::getCopy(int index) {return symTable.at(index); }
+
 int SymbolTable::insert(string name, int token, int type, int address,
                         bool isReference) {
   Symbol symbol;

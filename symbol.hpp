@@ -23,6 +23,7 @@ class SymbolTable {
   SymbolTable();
   ~SymbolTable();
   Symbol& get(int index);
+  Symbol getCopy(int index);
   int insert(string, int, int, int = 0, bool = false);
   int insertOrGet(string name, int token, int type);
   int insertTemp(int type);
